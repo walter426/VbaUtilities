@@ -15,6 +15,7 @@ AccessObjUtilities
 - Obtain record count of a SQL object
 - Check whether a table is valid or not
 - Obtain a string with all columns names of a table
+- Find a column in a table
 - Export Table to Text file
 
 ExcelUtilities:

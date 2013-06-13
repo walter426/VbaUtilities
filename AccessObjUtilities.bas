@@ -174,6 +174,43 @@ Exit_ObtainTblFldNameStr:
     Exit Function
 End Function
 
+'Find a column in a table
+Public Function FindColInTbl(Tbl_name As String, Col_name As String) As Integer
+    FindColInTbl = -1
+    
+    If TableExist(Tbl_name) = False Then
+            GoTo Exit_FindColInTbl
+    End If
+    
+     
+    With CurrentDb
+        Dim td As TableDef
+        Dim fld As Field
+        
+        Set td = .TableDefs(Tbl_name)
+    
+        If td.Fields.count <= 0 Then
+            GoTo Exit_FindColInTbl
+        End If
+    
+        Dim col_idx As Integer
+        col_idx = 0
+        
+        For Each fld In td.Fields
+            If Col_name = fld.Name Then
+                FindColInTbl = col_idx
+                Exit For
+            End If
+            
+            col_idx = col_idx + 1
+        Next
+    
+    End With 'CurrentDb
+    
+Exit_FindColInTbl:
+    Exit Function
+End Function
+
 'Export Table to Text file
 Public Sub ExportTableToTxt(Tbl_name As String, OutputPathFile As String, Delim As String, HasFldName As Boolean)
     If OutputPathFile = "" Or Tbl_name = "" Then
