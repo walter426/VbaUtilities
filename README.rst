@@ -23,29 +23,29 @@ ExcelUtilities:
 - Link multiple worksheets in workbooks
 
 FileSysUtilities:
-'Check whether a file exists
-'Copy File without error msg
-'Unzip multiple files in directory
-'Unzip a file
-'Ftp upload file
-'Ftp download file
-'Replace multiple strings in multiple files in a folder
-'Replace multiple strings in a file
+- Check whether a file exists
+- Copy File without error msg
+- Unzip multiple files in directory
+- Unzip a file
+- Ftp upload file
+- Ftp download file
+- Replace multiple strings in multiple files in a folder
+- Replace multiple strings in a file
 
 General Utilities:
-'Split a string into array by separator
-'Find string in an array
+- Split a string into array by separator
+- Find string in an array
 
 ShellUtilities:
-'Start a Shell command and wait for it to finish, hiding while it is running.
-'Send multiples shell commands with timeout
+- Start a Shell command and wait for it to finish, hiding while it is running.
+- Send multiples shell commands with timeout
 
 SqlUtilities:
-'Run SQL command without warning msg
-'Update multiple columns of a table under the same condition
-'Update a column of a table under a specified condition
-'Create Table with dedicated Column and Expressions from a source table
-'Create Table of group function, there is a default Group function for all columns, columns can be specified to different group fucntion
-'Create a set of grouped table, the grouping config is set in a specified table
-'Create table which are joined from two tables having the same columns for joining
-'Create table which is cancatenated from two tables of the same structure
+- Run SQL command without warning msg
+- Update multiple columns of a table under the same condition
+- Update a column of a table under a specified condition
+- Create Table with dedicated Column and Expressions from a source table
+- Create Table of group function, there is a default Group function for all columns, columns can be specified to different group fucntion
+- Create a set of grouped table, the grouping config is set in a specified table
+- Create table which are joined from two tables having the same columns for joining
+- Create table which is cancatenated from two tables of the same structure
