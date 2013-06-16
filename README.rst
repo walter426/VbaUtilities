@@ -17,7 +17,7 @@ AccessObjUtilities
 - Obtain a string with all columns names of a table
 - Find a column in a table
 - Export Table to Text file
-- Convert Access a Table into HTML Format
+- Convert Access Table into HTML Format
 
 ExcelUtilities:
 - Check whether specified worksheet exists or not in specified workbook

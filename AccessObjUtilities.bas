@@ -289,7 +289,7 @@ Public Sub ExportTableToTxt(Tbl_name As String, OutputPathFile As String, Delim 
     
 End Sub
 
-'Convert Access a Table into HTML Format
+'Convert Access Table into HTML Format
 Public Function ConvertTblToHtml(Tbl_name As String, Html As String) As String
     On Error GoTo Err_ConvertTblToHtml
     
