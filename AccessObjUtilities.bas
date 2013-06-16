@@ -88,8 +88,8 @@ End Function
 Public Function Query_RecordCount(Qry_name As String) As Long
     Query_RecordCount = -1
     
-    If QueryExist(Tbl_name) = False Then
-        GoTo Exit_Quey_RecordCount
+    If QueryExist(Qry_name) = False Then
+        GoTo Exit_Query_RecordCount
     End If
         
     
@@ -106,10 +106,16 @@ Public Function SQL_Obj_RecordCount(SQL_Obj_name As String) As Long
     Set RS = CurrentDb.OpenRecordset(SQL_Obj_name)
     
     With RS
-        .MoveFirst
-        .MoveLast
+    
+        If .EOF = True Then
+            SQL_Obj_RecordCount = 0
         
-        SQL_Obj_RecordCount = .RecordCount
+        Else
+            .MoveFirst
+            .MoveLast
+            
+            SQL_Obj_RecordCount = .RecordCount
+        End If
         
         .Close
     End With
@@ -129,6 +135,22 @@ Public Function TableValid(TableName As String) As Boolean
     End If
     
     TableValid = True
+    
+End Function
+
+'Check whether a query is valid or not
+Public Function QueryValid(Qryname As String) As Boolean
+    QueryValid = False
+    
+    If QueryExist(Qryname) = False Then
+        Exit Function
+    End If
+    
+    If Query_RecordCount(Qryname) <= 0 Then
+        Exit Function
+    End If
+    
+    QueryValid = True
     
 End Function
 
@@ -193,16 +215,16 @@ Public Function FindColInTbl(Tbl_name As String, Col_name As String) As Integer
             GoTo Exit_FindColInTbl
         End If
     
-        Dim col_idx As Integer
-        col_idx = 0
+        Dim Col_Idx As Integer
+        Col_Idx = 0
         
         For Each fld In td.Fields
             If Col_name = fld.Name Then
-                FindColInTbl = col_idx
+                FindColInTbl = Col_Idx
                 Exit For
             End If
             
-            col_idx = col_idx + 1
+            Col_Idx = Col_Idx + 1
         Next
     
     End With 'CurrentDb
