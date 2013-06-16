@@ -211,7 +211,7 @@ Exit_FindColInTbl:
     Exit Function
 End Function
 
-'Export Table to Text file
+'Export Access Table to Text file
 Public Sub ExportTableToTxt(Tbl_name As String, OutputPathFile As String, Delim As String, HasFldName As Boolean)
     If OutputPathFile = "" Or Tbl_name = "" Then
         Exit Sub
@@ -288,3 +288,67 @@ Public Sub ExportTableToTxt(Tbl_name As String, OutputPathFile As String, Delim 
     Close
     
 End Sub
+
+'Convert Access a Table into HTML Format
+Public Function ConvertTblToHtml(Tbl_name As String, Html As String) As String
+    On Error GoTo Err_ConvertTblToHtml
+    
+    Dim FailedReason As String
+    
+    If TableValid(Tbl_name) = False Then
+        FailedReason = Tbl_name & "is not valid"
+        GoTo Exit_ConvertTblToHtml
+    End If
+    
+
+    Html = Html & "<table border = ""1"", style = ""font-size:9pt;"">" & vbCrLf
+
+    
+    Dim RS_Tbl As DAO.Recordset
+    Set RS_Tbl = CurrentDb.OpenRecordset(Tbl_name)
+    
+    'Create table
+    With RS_Tbl
+        Dim fld_idx As Integer
+    
+        'Create header
+        Html = Html & "<tr>" & vbCrLf
+        
+        For fld_idx = 0 To .Fields.count - 1
+            Html = Html & "<th bgcolor = #c0c0c0>" & .Fields(fld_idx).Name & "</th>" & vbCrLf
+        Next fld_idx 'For fld_idx = 0 To .Fields.count - 1
+        
+        Html = Html & "</tr>"
+        
+        
+        'Create rows
+        .MoveFirst
+        
+        Do Until .EOF
+            Html = Html & "<tr>" & vbCrLf
+            
+            For fld_idx = 0 To .Fields.count - 1
+                Html = Html & "<td>" & .Fields(fld_idx).Value & "</td>" & vbCrLf
+            Next fld_idx 'For fld_idx = 0 To .Fields.count - 1
+            
+            Html = Html & "</tr>" & vbCrLf
+            
+            .MoveNext
+        Loop
+
+        .Close
+        
+    End With 'RS_TblD
+    
+    
+    Html = Html & "</table>"
+    
+    
+Exit_ConvertTblToHtml:
+    ConvertTblToHtml = FailedReason
+    Exit Function
+
+Err_ConvertTblToHtml:
+    MsgBox Err.Description
+    Resume Exit_ConvertTblToHtml
+End Function
