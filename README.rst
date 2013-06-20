@@ -34,10 +34,6 @@ FileSysUtilities:
 - Replace multiple strings in multiple files in a folder
 - Replace multiple strings in a file
 
-General Utilities:
-- Split a string into array by separator
-- Find string in an array
-
 ShellUtilities:
 - Start a Shell command and wait for it to finish, hiding while it is running.
 - Send multiples shell commands with timeout
@@ -51,3 +47,8 @@ SqlUtilities:
 - Create a set of grouped table, the grouping config is set in a specified table
 - Create table which are joined from two tables having the same columns for joining
 - Create table which is cancatenated from two tables of the same structure
+
+StrUtilities:
+- Split a string into array by separator
+- Find string in an array
+- Replace substring by regular expression

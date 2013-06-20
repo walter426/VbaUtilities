@@ -1,0 +1,65 @@
+Attribute VB_Name = "StrUtilities"
+Option Compare Database
+
+'Split a string into array by separator
+Public Function SplitStrIntoArray(str As String, separator As String) As Variant
+    Dim Arr As Variant
+    
+    If Len(str) > 0 Then
+        Arr = Split(str, separator)
+        
+        Dim i As Integer
+        
+        For i = 0 To UBound(Arr)
+            Arr(i) = Trim(Arr(i))
+        Next i
+    Else
+        Arr = Array()
+    End If
+    
+    SplitStrIntoArray = Arr
+    
+End Function
+
+'Find string in an array
+Public Function FindStrInArray(Array_str As Variant, str As String) As Integer
+    FindStrInArray = -1
+
+
+    Dim i As Integer
+    
+    For i = 0 To UBound(Array_str)
+        If str = Array_str(i) Then
+            FindStrInArray = i
+            Exit For
+        End If
+    Next i
+    
+End Function
+
+'Replace substring by regular expression
+Public Function Replace_RE(str As String, Pattern_f As String, substr_r As String) As String
+    On Error GoTo Exit_Replace_RE
+    
+    Replace_RE = str
+    
+    Dim RE As RegExp
+    Set RE = CreateObject("vbscript.regexp")
+    
+    With RE
+        .MultiLine = True
+        .Global = True
+        .IgnoreCase = False
+        .Pattern = Pattern_f
+        
+        Replace_RE = .Replace(str, substr_r)
+    End With
+    
+Exit_Replace_RE:
+    Exit Function
+
+Err_Replace_RE:
+    Call ShowMsgBox(Err.Description)
+    Resume Exit_Replace_RE
+End Function
+
