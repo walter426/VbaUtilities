@@ -26,9 +26,21 @@ Public Function ColumnLetter(oWs As Worksheet, Col As Long) As String
     ColumnLetter = sColumn
 End Function
 
-'Link multiple worksheets in workbooks
-Public Sub LinkToWorksheetInWorkbook(Wb_path As String, SheetNameList As Variant)
+Public Function LinkToWorksheetInWorkbook(Wb_path As String, SheetNameList As Variant, Optional SheetNameLocalList As Variant, Optional HasFieldNames As Boolean = True) As String
     On Error GoTo Err_LinkToWorksheetInWorkbook
+
+    Dim FailedReason As String
+
+    If Len(Dir(Wb_path)) = 0 Then
+        FailedReason = Wb_path
+        GoTo Exit_LinkToWorksheetInWorkbook
+    End If
+    
+
+    If VarType(SheetNameLocalList) <> vbArray + vbVariant Then
+        SheetNameLocalList = SheetNameList
+    End If
+
 
     Dim FullNameList() As Variant
     Dim SheetNameAndRangeList() As Variant
@@ -47,18 +59,32 @@ Public Sub LinkToWorksheetInWorkbook(Wb_path As String, SheetNameList As Variant
             Dim SheetNameIdx As Integer
             Dim SheetName As String
             Dim FullName As String
+            Dim ShtColCnt As Long
+            Dim col_idx As Long
             Dim SheetNameAndRange As String
             
             For SheetNameIdx = 0 To UBound(SheetNameList)
                 SheetName = SheetNameList(SheetNameIdx)
-                DelTable (SheetName)
+                DelTable (SheetNameLocalList(SheetNameIdx))
                   
                 On Error Resume Next
                 .Worksheets(SheetName).Activate
                 On Error GoTo Next_SheetNameIdx_1
                 
                 With .ActiveSheet.UsedRange
-                     SheetNameAndRange = SheetName & "!A1:" & ColumnLetter(oWb.ActiveSheet, .Columns.count) & .Rows.count
+                    ShtColCnt = .Columns.count
+                    
+                    If HasFieldNames = True Then
+                        For col_idx = 1 To ShtColCnt
+                            If IsEmpty(.Cells(1, col_idx)) = True Then
+                                ShtColCnt = col_idx - 1
+                                Exit For
+                            End If
+                        Next col_idx
+                    End If
+                    
+                    SheetNameAndRange = SheetName & "!A1:" & ColumnLetter(oWb.ActiveSheet, ShtColCnt) & .Rows.count
+                    
                 End With '.ActiveSheet.UsedRange
                 
                 FullNameList(SheetNameIdx) = .FullName
@@ -77,7 +103,7 @@ Next_SheetNameIdx_1:
     
 
     For SheetNameIdx = 0 To UBound(SheetNameList)
-        SheetName = SheetNameList(SheetNameIdx)
+        SheetName = SheetNameLocalList(SheetNameIdx)
         FullName = FullNameList(SheetNameIdx)
         SheetNameAndRange = SheetNameAndRangeList(SheetNameIdx)
 
@@ -90,10 +116,12 @@ Next_SheetNameIdx_2:
     
     On Error GoTo Err_LinkToWorksheetInWorkbook
     
+    
 Exit_LinkToWorksheetInWorkbook:
-    Exit Sub
+    LinkToWorksheetInWorkbook = FailedReason
+    Exit Function
 
 Err_LinkToWorksheetInWorkbook:
-    MsgBox Err.Description
+    FailedReason = Err.Description
     Resume Exit_LinkToWorksheetInWorkbook
-End Sub
+End Function
