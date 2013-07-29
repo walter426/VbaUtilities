@@ -23,6 +23,7 @@ ExcelUtilities:
 - Check whether specified worksheet exists or not in specified workbook
 - Convert Column Number To Column Letter
 - Link multiple worksheets in workbooks
+- Export a table to one or more worksheets in case row count over 65535
 
 FileSysUtilities:
 - Check whether a file exists
