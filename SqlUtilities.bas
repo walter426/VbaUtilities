@@ -29,6 +29,26 @@ Public Sub RunSQL_CmdWithoutWarning(SQL_cmd As String)
     DoCmd.SetWarnings True
 End Sub
 
+'Re-Select table items
+Public Sub ModifyTbl_ReSelect(Tbl_name, str_select)
+    Dim Tbl_T_name As String
+    Tbl_T_name = Tbl_name & "_temp"
+    
+    DelTable (Tbl_T_name)
+    
+    SQL_cmd = "SELECT " & str_select & " " & vbCrLf & _
+                "INTO [" & Tbl_T_name & "]" & vbCrLf & _
+                "FROM [" & Tbl_name & "]" & vbCrLf & _
+                ";"
+    
+    RunSQL_CmdWithoutWarning (SQL_cmd)
+    
+    
+    DelTable (Tbl_name)
+    DoCmd.Rename Tbl_name, acTable, Tbl_T_name
+    
+End Sub
+
 'Update multiple columns of a table under the same condition
 Public Function UpdateTblColBatchly(Tbl_src_name As String, Str_Col_Update As String, SQL_Format_Set As String, SQL_Format_Where As String) As String
     On Error GoTo Err_UpdateTblColBatchly

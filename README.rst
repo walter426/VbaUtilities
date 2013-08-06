@@ -41,6 +41,7 @@ ShellUtilities:
 
 SqlUtilities:
 - Run SQL command without warning msg
+- Re-Select table items
 - Update multiple columns of a table under the same condition
 - Update a column of a table under a specified condition
 - Create Table with dedicated Column and Expressions from a source table
