@@ -29,7 +29,7 @@ Public Sub RunSQL_CmdWithoutWarning(SQL_cmd As String)
     DoCmd.SetWarnings True
 End Sub
 
-'Re-Select table items
+'Re-Select table columns
 Public Sub ModifyTbl_ReSelect(Tbl_name, str_select)
     Dim Tbl_T_name As String
     Tbl_T_name = Tbl_name & "_temp"
