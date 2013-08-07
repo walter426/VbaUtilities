@@ -224,7 +224,7 @@ Err_CreateTbl_ColAndExpr:
 End Function
 
 'Create Table of group function, there is a default Group function for all columns, columns can be specified to different group fucntion
-Public Function CreateTbl_Group(Tbl_input_name As String, Str_Col_Group As String, Str_Col_Order As String, Str_GroupFunc_all As String, Str_Col_Sum As String, Str_Col_Avg As String, Str_Col_Max As String, SQL_Seg_Where As String, Tbl_output_name As String) As String
+Public Function CreateTbl_Group(Tbl_input_name As String, Tbl_output_name As String, Str_Col_Group As String, Optional Str_GroupFunc_all As String = "", Optional GF_all_dbTypes As Variant = "", Optional Str_Col_UnSelected As String = "", Optional ByVal GroupFunc_Col_Pairs As Variant = "", Optional SQL_Seg_Where As String = "", Optional Str_Col_Order As String = "") As String
     On Error GoTo Err_CreateTbl_Group
     
     Dim FailedReason As String
@@ -235,30 +235,52 @@ Public Function CreateTbl_Group(Tbl_input_name As String, Str_Col_Group As Strin
     End If
 
     If Len(Str_Col_Group) = 0 Then
+        FailedReason = "No Any Group Columns"
         GoTo Exit_CreateTbl_Group
     End If
+
+    
+    If Str_GroupFunc_all <> "" Then
+        If UBound(GF_all_dbTypes) < 0 Then
+            FailedReason = "No db Type is assigned for the general group function"
+            GoTo Exit_CreateTbl_Group
+        End If
+    End If
+
+
+    If VarType(GroupFunc_Col_Pairs) <> vbArray + vbVariant Then
+        If Str_GroupFunc_all = "" Then
+            FailedReason = "No Any Group Functions for all or specified columns"
+            GoTo Exit_CreateTbl_Group
+        Else
+            GroupFunc_Col_Pairs = Array()
+        End If
+    End If
+         
+    Dim GF_C_P_idx As Integer
+
+    For GF_C_P_idx = 0 To UBound(GroupFunc_Col_Pairs)
+        GroupFunc_Col_Pairs(GF_C_P_idx)(1) = SplitStrIntoArray(GroupFunc_Col_Pairs(GF_C_P_idx)(1) & "", ",")
+    Next GF_C_P_idx
     
     
     Str_GroupFunc_all = Trim(Str_GroupFunc_all)
     
     
-    Dim Col_Idx As Integer
+    Dim col_idx As Integer
     
     Dim Col_Group As Variant
+    Dim Col_UnSelected As Variant
     Dim Col_Order As Variant
-    Dim Col_Sum As Variant
-    Dim Col_Avg As Variant
-    Dim Col_Max As Variant
+
     
     Col_Group = SplitStrIntoArray(Str_Col_Group, ",")
+    Col_UnSelected = SplitStrIntoArray(Str_Col_UnSelected, ",")
     Col_Order = SplitStrIntoArray(Str_Col_Order, ",")
-    Col_Sum = SplitStrIntoArray(Str_Col_Sum, ",")
-    Col_Avg = SplitStrIntoArray(Str_Col_Avg, ",")
-    Col_Max = SplitStrIntoArray(Str_Col_Max, ",")
     
 
     DelTable (Tbl_output_name)
-
+    
 
     With CurrentDb
         Dim RS_Tbl_input As Recordset
@@ -284,6 +306,7 @@ Public Function CreateTbl_Group(Tbl_input_name As String, Str_Col_Group As Strin
             
             Dim Col_GroupBy As Variant
             
+            Dim GroupFunc_Col_Pair As Variant
             Dim GroupFunc As String
             
             For fld_idx = 0 To .Fields.count - 1
@@ -298,24 +321,31 @@ Public Function CreateTbl_Group(Tbl_input_name As String, Str_Col_Group As Strin
                     End If
                 End If
                 
-                    
+                                                
                 If IsColForGroupBy = True Then
                     SQL_Seg_Select = SQL_Seg_Select & "[" & fld_name & "], "
                     
-                ElseIf .Fields(fld_idx).Type <> dbText And .Fields(fld_idx).Type <> dbDate Then
-                    If FindStrInArray(Col_Sum, fld_name) > -1 Then
-                        GroupFunc = "SUM"
+                ElseIf FindStrInArray(Col_UnSelected, fld_name) < 0 Then
+                    GroupFunc = ""
+                    
+                    For Each GroupFunc_Col_Pair In GroupFunc_Col_Pairs
+                        If FindStrInArray(GroupFunc_Col_Pair(1), fld_name) > -1 Then
+                            GroupFunc = GroupFunc_Col_Pair(0)
+                        End If
+
+                    Next GroupFunc_Col_Pair
+                    
+ 
+                    If GroupFunc = "" And Str_GroupFunc_all <> "" Then
+                        For Each GF_all_dbType In GF_all_dbTypes
+                            If .Fields(fld_idx).Type = GF_all_dbType Then
+                                GroupFunc = Str_GroupFunc_all
+                            End If
                         
-                    ElseIf FindStrInArray(Col_Avg, fld_name) > -1 Then
-                        GroupFunc = "AVG"
-                        
-                    ElseIf FindStrInArray(Col_Max, fld_name) > -1 Then
-                        GroupFunc = "MAX"
-                        
-                    Else
-                        GroupFunc = Str_GroupFunc_all
+                        Next GF_all_dbType
                         
                     End If
+                    
                     
                     If GroupFunc <> "" Then
                         SQL_Seg_Select = SQL_Seg_Select & GroupFunc & "([" & Tbl_input_name & "].[" & fld_name & "]) AS [" & fld_name & "], "
@@ -338,9 +368,9 @@ Next_CreateTbl_Group_1:
         If UBound(Col_Order) >= 0 Then
             SQL_Seg_OrderBy = "ORDER BY "
             
-            For Col_Idx = 0 To UBound(Col_Order)
-                SQL_Seg_OrderBy = SQL_Seg_OrderBy & "[" & Col_Order(Col_Idx) & "], "
-            Next Col_Idx
+            For col_idx = 0 To UBound(Col_Order)
+                SQL_Seg_OrderBy = SQL_Seg_OrderBy & "[" & Col_Order(col_idx) & "], "
+            Next col_idx
             
             SQL_Seg_OrderBy = Left(SQL_Seg_OrderBy, Len(SQL_Seg_OrderBy) - 2)
             
@@ -378,6 +408,7 @@ Err_CreateTbl_Group:
     
 End Function
 
+
 'Create a set of grouped table, the grouping config is set in a specified table
 Public Function CreateTbls_TblToSum(Tbl_MT_name As String) As String
     On Error GoTo Err_CreateTbls_TblToSum
@@ -397,11 +428,15 @@ Public Function CreateTbls_TblToSum(Tbl_MT_name As String) As String
         With RS_Tbl_MT
             Dim Tbl_src_name As String
             Dim Tbl_sum_name As String
-            Dim Str_Col_Order As String
+            
+            Dim Str_Col_Group As String
+            Dim Str_Col_UnSelected as String
             Dim Str_GroupFunc_all As String
-            Dim Str_Col_Sum As String
-            Dim Str_Col_Avg As String
-            Dim Str_Col_Max As String
+            Dim GF_all_dbTypes As Variant
+            
+            Dim GroupFunc_Col_Pairs As Variant
+            Dim SQL_Seg_Where As String
+            Dim Str_Col_Order As String
             
             .MoveFirst
         
@@ -417,22 +452,14 @@ Public Function CreateTbls_TblToSum(Tbl_MT_name As String) As String
                     GoTo Loop_CreateTbls_TblToSum_1
                 End If
 
-
                 Tbl_sum_name = .Fields("Tbl_sum").Value
                 
                 If Len(Tbl_sum_name) = 0 Then
                     GoTo Loop_CreateTbls_TblToSum_1
                 End If
                 
-                
                 If IsNull(.Fields("Col_Group").Value) = True Then
                     GoTo Loop_CreateTbls_TblToSum_1
-                End If
-                
-                If IsNull(.Fields("Col_Order").Value) = True Then
-                    Str_Col_Order = ""
-                Else
-                    Str_Col_Order = .Fields("Col_Order").Value
                 End If
                 
                 If IsNull(.Fields("GroupFunc_all").Value) = True Then
@@ -440,6 +467,8 @@ Public Function CreateTbls_TblToSum(Tbl_MT_name As String) As String
                 Else
                     Str_GroupFunc_all = .Fields("GroupFunc_all").Value
                 End If
+                
+                GF_all_dbTypes = Array(dbInteger, dbLong, dbSingle, dbDouble, dbDecimal)
                 
                 If IsNull(.Fields("Col_Sum").Value) = True Then
                     Str_Col_Sum = ""
@@ -459,8 +488,17 @@ Public Function CreateTbls_TblToSum(Tbl_MT_name As String) As String
                     Str_Col_Max = .Fields("Col_Max").Value
                 End If
                 
+                GroupFunc_Col_Pairs = Array(Array("SUM", Str_Col_Sum), _
+                                            Array("AVG", Str_Col_Avg), _
+                                            Array("MAX", Str_Col_Max))
                 
-                Call CreateTbl_Group(Tbl_src_name, .Fields("Col_Group").Value, Str_Col_Order, Str_GroupFunc_all, Str_Col_Sum, Str_Col_Avg, Str_Col_Max, "", Tbl_sum_name)
+                If IsNull(.Fields("Col_Order").Value) = True Then
+                    Str_Col_Order = ""
+                Else
+                    Str_Col_Order = .Fields("Col_Order").Value
+                End If
+                
+                Call CreateTbl_Group(Tbl_src_name, Tbl_sum_name, .Fields("Col_Group").Value, Str_GroupFunc_all:=Str_GroupFunc_all, GF_all_dbTypes:=GF_all_dbTypes, GroupFunc_Col_Pairs:=GroupFunc_Col_Pairs, Str_Col_Order:=Str_Col_Order)
 
 Loop_CreateTbls_TblToSum_1:
                 .MoveNext
