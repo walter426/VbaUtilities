@@ -118,7 +118,7 @@ Err_ExtractZip:
 End Function
 
 'Ftp upload file
-Public Function FTPUpload(sSite, sUsername, sPassword, sLocalFile, sRemotePath) As String
+Public Function FTPUpload(sSite, sUsername, sPassword, sLocalFile, sRemotePath, Optional Delay As Integer = 1000) As String
     'This script is provided under the Creative Commons license located
     'at http://creativecommons.org/licenses/by-nc/2.5/ . It may not
     'be used for commercial purposes with out the expressed written consent
@@ -212,7 +212,7 @@ Public Function FTPUpload(sSite, sUsername, sPassword, sLocalFile, sRemotePath) 
     oFTPScriptShell.Run "%comspec% /c FTP -n -s:" & sFTPTempFile & " " & sSite & _
                         " > " & sFTPResults, 0, True
     
-    Sleep 1000
+    Sleep Delay
     
     'Check results of transfer.
     Dim fFTPResults As Object
@@ -225,9 +225,6 @@ Public Function FTPUpload(sSite, sUsername, sPassword, sLocalFile, sRemotePath) 
     
     fFTPResults.Close
     
-    oFTPScriptFSO.DeleteFile (sFTPTempFile)
-    oFTPScriptFSO.DeleteFile (sFTPResults)
-    
     If InStr(sResults, "226 Transfer complete.") > 0 Then
         FTPUpload = ""
     ElseIf InStr(sResults, "File not found") > 0 Then
@@ -238,12 +235,15 @@ Public Function FTPUpload(sSite, sUsername, sPassword, sLocalFile, sRemotePath) 
         FTPUpload = "Error: Unknown."
     End If
     
+    oFTPScriptFSO.DeleteFile (sFTPTempFile)
+    oFTPScriptFSO.DeleteFile (sFTPResults)
+    
     Set oFTPScriptFSO = Nothing
     Set oFTPScriptShell = Nothing
 End Function
 
 'Ftp download file
-Function FTPDownload(sSite, sUsername, sPassword, sLocalPath, sRemotePath, sRemoteFile) As Boolean
+Function FTPDownload(sSite, sUsername, sPassword, sLocalPath, sRemotePath, sRemoteFile, Optional Delay As Integer = 1000) As String
     Const OpenAsDefault = -2
     Const FailIfNotExist = 0
     Const ForReading = 1
@@ -318,7 +318,8 @@ Function FTPDownload(sSite, sUsername, sPassword, sLocalPath, sRemotePath, sRemo
     oFTPScriptShell.Run "%comspec% /c FTP -n -s:" & sFTPTempFile & " " & sSite & _
     " > " & sFTPResults, 0, True
     
-    Sleep 1000
+    Sleep Delay
+
     
     'Check results of transfer.
     Dim fFTPResults As Object
@@ -330,15 +331,17 @@ Function FTPDownload(sSite, sUsername, sPassword, sLocalPath, sRemotePath, sRemo
     fFTPResults.Close
     
     If InStr(sResults, "226 Transfer complete.") > 0 Then
-        FTPDownload = True
-    'ElseIf InStr(sResults, "File not found") > 0 Then
-        'FTPDownload = "Error: File Not Found"
-    'ElseIf InStr(sResults, "cannot log in.") > 0 Then
-        'FTPDownload = "Error: Login Failed."
+        FTPDownload = ""
+    ElseIf InStr(sResults, "File not found") > 0 Then
+        FTPDownload = "Error: File Not Found"
+    ElseIf InStr(sResults, "cannot log in.") > 0 Then
+        FTPDownload = "Error: Login Failed."
     Else
-        'FTPDownload = "Error: Unknown."
-        FTPDownload = False
+        FTPDownload = "Error: Unknown."
     End If
+    
+    oFTPScriptFSO.DeleteFile (sFTPTempFile)
+    oFTPScriptFSO.DeleteFile (sFTPResults)
     
     Set oFTPScriptFSO = Nothing
     Set oFTPScriptShell = Nothing
