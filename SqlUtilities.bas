@@ -410,14 +410,14 @@ End Function
 
 
 'Create a set of grouped table, the grouping config is set in a specified table
-Public Function CreateTbls_TblToSum(Tbl_MT_name As String) As String
-    On Error GoTo Err_CreateTbls_TblToSum
+Public Function CreateTbls_Group(Tbl_MT_name As String) As String
+    On Error GoTo Err_CreateTbls_Group
     
     Dim FailedReason As String
     
     If TableExist(Tbl_MT_name) = False Then
         FailedReason = Tbl_MT_name & " does not exist!"
-        GoTo Exit_CreateTbls_TblToSum
+        GoTo Exit_CreateTbls_Group
     End If
 
 
@@ -426,11 +426,13 @@ Public Function CreateTbls_TblToSum(Tbl_MT_name As String) As String
         Set RS_Tbl_MT = .OpenRecordset(Tbl_MT_name)
         
         With RS_Tbl_MT
+            Dim FailedReason_1 As String
+            
             Dim Tbl_src_name As String
-            Dim Tbl_sum_name As String
+            Dim Tbl_Group_name As String
             
             Dim Str_Col_Group As String
-            Dim Str_Col_UnSelected as String
+            Dim Str_Col_UnSelected As String
             Dim Str_GroupFunc_all As String
             Dim GF_all_dbTypes As Variant
             
@@ -443,23 +445,23 @@ Public Function CreateTbls_TblToSum(Tbl_MT_name As String) As String
             Do Until .EOF
             
                 If .Fields("Enable").Value = False Then
-                    GoTo Loop_CreateTbls_TblToSum_1
+                    GoTo Loop_CreateTbls_Group_1
                 End If
             
                 Tbl_src_name = .Fields("Tbl_src").Value
                 
                 If TableExist(Tbl_src_name) = False Then
-                    GoTo Loop_CreateTbls_TblToSum_1
+                    GoTo Loop_CreateTbls_Group_1
                 End If
 
-                Tbl_sum_name = .Fields("Tbl_sum").Value
+                Tbl_Group_name = .Fields("Tbl_Group").Value
                 
-                If Len(Tbl_sum_name) = 0 Then
-                    GoTo Loop_CreateTbls_TblToSum_1
+                If Len(Tbl_Group_name) = 0 Then
+                    GoTo Loop_CreateTbls_Group_1
                 End If
                 
                 If IsNull(.Fields("Col_Group").Value) = True Then
-                    GoTo Loop_CreateTbls_TblToSum_1
+                    GoTo Loop_CreateTbls_Group_1
                 End If
                 
                 If IsNull(.Fields("GroupFunc_all").Value) = True Then
@@ -498,9 +500,13 @@ Public Function CreateTbls_TblToSum(Tbl_MT_name As String) As String
                     Str_Col_Order = .Fields("Col_Order").Value
                 End If
                 
-                Call CreateTbl_Group(Tbl_src_name, Tbl_sum_name, .Fields("Col_Group").Value, Str_GroupFunc_all:=Str_GroupFunc_all, GF_all_dbTypes:=GF_all_dbTypes, GroupFunc_Col_Pairs:=GroupFunc_Col_Pairs, Str_Col_Order:=Str_Col_Order)
+                FailedReason_1 = CreateTbl_Group(Tbl_src_name, Tbl_Group_name, .Fields("Col_Group").Value, Str_GroupFunc_all:=Str_GroupFunc_all, GF_all_dbTypes:=GF_all_dbTypes, GroupFunc_Col_Pairs:=GroupFunc_Col_Pairs, Str_Col_Order:=Str_Col_Order)
+                
+                If FailedReason_1 <> "" Then
+                    FailedReason = FailedReason & Tbl_Group_name & ": " & FailedReason_1 & vbCrLf
+                End If
 
-Loop_CreateTbls_TblToSum_1:
+Loop_CreateTbls_Group_1:
                 .MoveNext
             Loop
             
@@ -513,13 +519,13 @@ Loop_CreateTbls_TblToSum_1:
     End With 'CurrentDb
 
 
-Exit_CreateTbls_TblToSum:
-    CreateTbls_TblToSum = FailedReason
+Exit_CreateTbls_Group:
+    CreateTbls_Group = FailedReason
     Exit Function
 
-Err_CreateTbls_TblToSum:
-    Call ShowMsgBox(Err.Description)
-    Resume Exit_CreateTbls_TblToSum
+Err_CreateTbls_Group:
+    FailedReason = Err.Description
+    Resume Exit_CreateTbls_Group
     
 End Function
 
