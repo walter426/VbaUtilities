@@ -102,7 +102,7 @@ Exit_Shell_SendKeysWithTimeout:
     Exit Function
 
 Err_Shell_SendKeysWithTimeout:
-    MsgBox Err.Description
+    FailedReason = Err.Description
     Resume Exit_Shell_SendKeysWithTimeout
     
 End Function

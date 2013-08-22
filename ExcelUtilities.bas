@@ -243,8 +243,33 @@ Exit_ExportTblToSht:
     Exit Function
 
 Err_ExportTblToSht:
-    Call ShowMsgBox(Err.Description)
+    FailedReason = Err.Description
     Resume Exit_ExportTblToSht
     
 End Function
 
+'Replace String in a range of a worksheet that enclose any excel error in a function
+Public Function ReplaceStrInWsRng(oWsRng As Range, What As Variant, Replacement As Variant, Optional LookAt As Variant, Optional SearchOrder As Variant, Optional MatchCase As Variant, Optional MatchByte As Variant, Optional SearchFormat As Variant, Optional ReplaceFormat As Variant) As String
+    On Error GoTo Err_ReplaceStrInWsRng
+    
+    Dim FailedReason As String
+    
+    With oWsRng
+        .Application.DisplayAlerts = False
+
+        .Replace What, Replacement, LookAt, SearchOrder, MatchCase, MatchByte, SearchFormat, ReplaceFormat
+
+        .Application.DisplayAlerts = True
+        
+    End With '.oWsRng
+
+
+Exit_ReplaceStrInWsRng:
+    ReplaceStrInWsRng = FailedReason
+    Exit Function
+
+Err_ReplaceStrInWsRng:
+    FailedReason = Err.Description
+    Resume Exit_ReplaceStrInWsRng
+    
+End Function

@@ -103,7 +103,7 @@ Exit_UpdateTblColBatchly:
     Exit Function
 
 Err_UpdateTblColBatchly:
-    Call ShowMsgBox(Err.Description)
+    FailedReason = Err.Description
     Resume Exit_UpdateTblColBatchly
     
 End Function
@@ -143,7 +143,7 @@ Exit_UpdateTblCol:
     Exit Function
 
 Err_UpdateTblCol:
-    Call ShowMsgBox(Err.Description)
+    FailedReason = Err.Description
     Resume Exit_UpdateTblCol
     
 End Function
@@ -218,7 +218,7 @@ Exit_CreateTbl_ColAndExpr:
     Exit Function
 
 Err_CreateTbl_ColAndExpr:
-    Call ShowMsgBox(Err.Description)
+    FailedReason = Err.Description
     Resume Exit_CreateTbl_ColAndExpr
     
 End Function
@@ -403,7 +403,7 @@ Exit_CreateTbl_Group:
     Exit Function
 
 Err_CreateTbl_Group:
-    Call ShowMsgBox(Err.Description)
+    FailedReason = Err.Description
     Resume Exit_CreateTbl_Group
     
 End Function
@@ -649,7 +649,7 @@ Exit_CreateTbl_JoinTwoTbl:
     Exit Function
 
 Err_CreateTbl_JoinTwoTbl:
-    Call ShowMsgBox(Err.Description)
+    FailedReason = Err.Description
     Resume Exit_CreateTbl_JoinTwoTbl
     
 End Function
@@ -721,7 +721,7 @@ Exit_CreateTbl_ConcatTwoTbl:
     Exit Function
 
 Err_CreateTbl_ConcatTwoTbl:
-    Call ShowMsgBox(Err.Description)
+    FailedReason = Err.Description
     Resume Exit_CreateTbl_ConcatTwoTbl
     
 End Function

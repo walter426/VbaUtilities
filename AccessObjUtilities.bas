@@ -172,7 +172,11 @@ Public Function QueryValid(Qryname As String) As Boolean
 End Function
 
 'Remove all link tables
-Public Sub RemoveLink()
+Public Function RemoveLink() As String
+    On Error GoTo Err_RemoveLink
+    
+    Dim FailedReason As String
+    
     Dim dbs As Database, tdf As TableDef
     ' Return Database variable that points to current database.
     Set dbs = CurrentDb
@@ -182,7 +186,15 @@ Public Sub RemoveLink()
         End If
     Next tdf
 
-End Sub
+Exit_RemoveLink:
+    RemoveLink = FailedReason
+    Exit Function
+
+Err_RemoveLink:
+    FailedReason = Err.Description
+    Resume Exit_RemoveLink
+    
+End Function
 
 'Obtain a string with all columns names of a table
 Public Function ObtainTblFldNameStr(Tbl_name As String)
@@ -388,6 +400,6 @@ Exit_ConvertTblToHtml:
     Exit Function
 
 Err_ConvertTblToHtml:
-    MsgBox Err.Description
+    FailedReason = Err.Description
     Resume Exit_ConvertTblToHtml
 End Function

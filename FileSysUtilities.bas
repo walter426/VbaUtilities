@@ -81,7 +81,7 @@ Exit_ExtractZip:
     Exit Function
 
 Err_ExtractZip:
-    Call ShowMsgBox(Err.Description)
+    FailedReason = Err.Description
     Resume Exit_ExtractZip
 
 End Function
@@ -112,7 +112,7 @@ Exit_ExtractZip:
     Exit Function
 
 Err_ExtractZip:
-    Call ShowMsgBox(Err.Description)
+    FailedReason = Err.Description
     Resume Exit_ExtractZip
 
 End Function

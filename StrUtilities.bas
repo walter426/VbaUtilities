@@ -55,6 +55,7 @@ Public Function FindStrInArray(Array_str As Variant, str As String) As Integer
 End Function
 
 'Replace substring by regular expression
+'Ref: Microsoft VBScript Regular Expressions 5.5
 Public Function Replace_RE(str As String, Pattern_f As String, substr_r As String) As String
     On Error GoTo Exit_Replace_RE
     
@@ -76,7 +77,7 @@ Exit_Replace_RE:
     Exit Function
 
 Err_Replace_RE:
-    Call ShowMsgBox(Err.Description)
+    FailedReason = Err.Description
     Resume Exit_Replace_RE
 End Function
 

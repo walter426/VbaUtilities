@@ -24,6 +24,7 @@ ExcelUtilities:
 - Convert Column Number To Column Letter
 - Link multiple worksheets in workbooks
 - Export a table to one or more worksheets in case row count over 65535
+- Replace String in a range of a worksheet that enclose any excel error in a function
 
 FileSysUtilities:
 - Check whether a file exists
