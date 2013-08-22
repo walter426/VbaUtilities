@@ -70,7 +70,7 @@ Public Function LinkToWorksheetInWorkbook(Wb_path As String, SheetNameList As Va
     
     With oExcel
         Dim oWb As Workbook
-        Set oWb = .Workbooks.Open(Filename:=Wb_path)
+        Set oWb = .Workbooks.Open(Filename:=Wb_path, ReadOnly:=True)
 
         With oWb
             Dim SheetNameIdx As Integer
