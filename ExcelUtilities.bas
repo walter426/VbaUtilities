@@ -183,7 +183,12 @@ Next_SheetNameIdx_1:
     
 
     For SheetNameIdx = 0 To UBound(SheetNameList)
-        SheetName = SheetNameLocalList(SheetNameIdx)
+        If SheetNameLocalList(SheetNameIdx) <> "" Then
+            SheetName = SheetNameLocalList(SheetNameIdx)
+        Else
+            SheetName = SheetNameList(SheetNameIdx)
+        End If
+        
         FullName = FullNameList(SheetNameIdx)
         SheetNameAndRange = SheetNameAndRangeList(SheetNameIdx)
 
