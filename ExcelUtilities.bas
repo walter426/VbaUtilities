@@ -58,11 +58,6 @@ Public Function LinkToWorksheetInWorkbook(Wb_path As String, ByVal SheetNameList
     If VarType(SheetNameLocalList) <> vbArray + vbVariant Then
         SheetNameLocalList = SheetNameList
     End If
-
-
-    If VarType(ShtSeriesNameLocalList) <> vbArray + vbVariant Then
-        ShtSeriesNameLocalList = ShtSeriesNameList
-    End If
     
 
     'Prepare worksheets to be linked.
@@ -85,54 +80,57 @@ Public Function LinkToWorksheetInWorkbook(Wb_path As String, ByVal SheetNameList
 
         With oWb
             'Prepare to link worksheets in series
-            Dim ShtSeries As Variant
+            If VarType(ShtSeriesList) = vbArray + vbVariant Then
             
-            Dim ShtSeries_name As String
-            Dim ShtSeries_local_name As String
-            Dim ShtSeries_start_idx As Integer
-            Dim ShtSeries_end_idx As Integer
-            
-            Dim WsInS_idx As Integer
-            Dim WsInS_cnt As Integer
-            
-            For Each ShtSeries In ShtSeriesList
-                ShtSeries_name = ShtSeries(0)
-                ShtSeries_local_name = ShtSeries(1)
-                ShtSeries_start_idx = ShtSeries(2)
-                ShtSeries_end_idx = ShtSeries(3)
+                Dim ShtSeries As Variant
                 
-                If ShtSeries_local_name = "" Then
-                    ShtSeries_local_name = ShtSeries_name
-                End If
+                Dim ShtSeries_name As String
+                Dim ShtSeries_local_name As String
+                Dim ShtSeries_start_idx As Integer
+                Dim ShtSeries_end_idx As Integer
                 
+                Dim WsInS_idx As Integer
+                Dim WsInS_cnt As Integer
                 
-                If ShtSeries_end_idx < ShtSeries_start_idx Then
-                    ShtSeries_end_idx = .Worksheets.count - 1
-                End If
-                
-                
-                WsInS_cnt = 0
-            
-                For WsInS_idx = ShtSeries_start_idx To ShtSeries_start_idx
-                    If WorkSheetExist(oWb, Replace(ShtSeries_name, "*", WsInS_idx)) = True Then
-                        WsInS_cnt = WsInS_cnt + 1
-                    Else
-                        Exit For
+                For Each ShtSeries In ShtSeriesList
+                    ShtSeries_name = ShtSeries(0)
+                    ShtSeries_local_name = ShtSeries(1)
+                    ShtSeries_start_idx = ShtSeries(2)
+                    ShtSeries_end_idx = ShtSeries(3)
+                    
+                    If ShtSeries_local_name = "" Then
+                        ShtSeries_local_name = ShtSeries_name
                     End If
                     
-                Next WsInS_idx
-            
-
-                If WsInS_cnt > 0 Then
-                    For WsInS_idx = 0 To WsInS_cnt
-                        FailedReason = AppendArray(SheetNameList, Array(Replace(ShtSeries_name, "*", WsInS_idx)))
-                        FailedReason = AppendArray(SheetNameLocalList, Array(Replace(ShtSeries_local_name, "*", WsInS_idx)))
-                    Next WsInS_idx
                     
-                End If
+                    If ShtSeries_end_idx < ShtSeries_start_idx Then
+                        ShtSeries_end_idx = .Worksheets.count - 1
+                    End If
+                    
+                    
+                    WsInS_cnt = 0
                 
-            Next ShtSeries
-            
+                    For WsInS_idx = ShtSeries_start_idx To ShtSeries_start_idx
+                        If WorkSheetExist(oWb, Replace(ShtSeries_name, "*", WsInS_idx)) = True Then
+                            WsInS_cnt = WsInS_cnt + 1
+                        Else
+                            Exit For
+                        End If
+                        
+                    Next WsInS_idx
+                
+    
+                    If WsInS_cnt > 0 Then
+                        For WsInS_idx = 0 To WsInS_cnt
+                            FailedReason = AppendArray(SheetNameList, Array(Replace(ShtSeries_name, "*", WsInS_idx)))
+                            FailedReason = AppendArray(SheetNameLocalList, Array(Replace(ShtSeries_local_name, "*", WsInS_idx)))
+                        Next WsInS_idx
+                        
+                    End If
+                    
+                Next ShtSeries
+                
+            End If
             
             'Link worksheets
             ReDim FullNameList(0 To UBound(SheetNameList))
@@ -208,6 +206,7 @@ Err_LinkToWorksheetInWorkbook:
     Resume Exit_LinkToWorksheetInWorkbook
     
 End Function
+
 
 'Export a table to one or more worksheets in case row count over 65535
 Public Function ExportTblToSht(oExcel As Object, Wb_path, Tbl_name As String, Sht_name As String) As String
