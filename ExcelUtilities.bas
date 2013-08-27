@@ -43,7 +43,8 @@ Public Function ColumnLetter(oWs As Worksheet, Col As Long) As String
     ColumnLetter = sColumn
 End Function
 
-Public Function LinkToWorksheetInWorkbook(Wb_path As String, SheetNameList As Variant, Optional SheetNameLocalList As Variant, Optional HasFieldNames As Boolean = True) As String
+'Link multiple worksheets in workbooks
+Public Function LinkToWorksheetInWorkbook(Wb_path As String, ByVal SheetNameList As Variant, Optional ByVal SheetNameLocalList As Variant, Optional ByVal ShtSeriesList As Variant, Optional HasFieldNames As Boolean = True) As String
     On Error GoTo Err_LinkToWorksheetInWorkbook
 
     Dim FailedReason As String
@@ -59,11 +60,21 @@ Public Function LinkToWorksheetInWorkbook(Wb_path As String, SheetNameList As Va
     End If
 
 
+    If VarType(ShtSeriesNameLocalList) <> vbArray + vbVariant Then
+        ShtSeriesNameLocalList = ShtSeriesNameList
+    End If
+    
+
+    'Prepare worksheets to be linked.
+    If UBound(SheetNameList) <> UBound(SheetNameLocalList) Then
+        FailedReason = "No. of elements in SheetNameList and SheetNameLocalList are not equal"
+        GoTo Exit_LinkToWorksheetInWorkbook
+    End If
+    
+
+    'Link worksheets
     Dim FullNameList() As Variant
     Dim SheetNameAndRangeList() As Variant
-    
-    ReDim FullNameList(0 To UBound(SheetNameList))
-    ReDim SheetNameAndRangeList(0 To UBound(SheetNameList))
 
     Dim oExcel As Excel.Application
     Set oExcel = CreateObject("Excel.Application")
@@ -73,13 +84,67 @@ Public Function LinkToWorksheetInWorkbook(Wb_path As String, SheetNameList As Va
         Set oWb = .Workbooks.Open(Filename:=Wb_path, ReadOnly:=True)
 
         With oWb
+            'Prepare to link worksheets in series
+            Dim ShtSeries As Variant
+            
+            Dim ShtSeries_name As String
+            Dim ShtSeries_local_name As String
+            Dim ShtSeries_start_idx As Integer
+            Dim ShtSeries_end_idx As Integer
+            
+            Dim WsInS_idx As Integer
+            Dim WsInS_cnt As Integer
+            
+            For Each ShtSeries In ShtSeriesList
+                ShtSeries_name = ShtSeries(0)
+                ShtSeries_local_name = ShtSeries(1)
+                ShtSeries_start_idx = ShtSeries(2)
+                ShtSeries_end_idx = ShtSeries(3)
+                
+                If ShtSeries_local_name = "" Then
+                    ShtSeries_local_name = ShtSeries_name
+                End If
+                
+                
+                If ShtSeries_end_idx < ShtSeries_start_idx Then
+                    ShtSeries_end_idx = .Worksheets.count - 1
+                End If
+                
+                
+                WsInS_cnt = 0
+            
+                For WsInS_idx = ShtSeries_start_idx To ShtSeries_start_idx
+                    If WorkSheetExist(oWb, Replace(ShtSeries_name, "*", WsInS_idx)) = True Then
+                        WsInS_cnt = WsInS_cnt + 1
+                    Else
+                        Exit For
+                    End If
+                    
+                Next WsInS_idx
+            
+
+                If WsInS_cnt > 0 Then
+                    For WsInS_idx = 0 To WsInS_cnt
+                        FailedReason = AppendArray(SheetNameList, Array(Replace(ShtSeries_name, "*", WsInS_idx)))
+                        FailedReason = AppendArray(SheetNameLocalList, Array(Replace(ShtSeries_local_name, "*", WsInS_idx)))
+                    Next WsInS_idx
+                    
+                End If
+                
+            Next ShtSeries
+            
+            
+            'Link worksheets
+            ReDim FullNameList(0 To UBound(SheetNameList))
+            ReDim SheetNameAndRangeList(0 To UBound(SheetNameList))
+    
             Dim SheetNameIdx As Integer
             Dim SheetName As String
             Dim FullName As String
             Dim ShtColCnt As Long
             Dim col_idx As Long
             Dim SheetNameAndRange As String
-            
+
             For SheetNameIdx = 0 To UBound(SheetNameList)
                 SheetName = SheetNameList(SheetNameIdx)
                 DelTable (SheetNameLocalList(SheetNameIdx))
@@ -141,6 +206,7 @@ Exit_LinkToWorksheetInWorkbook:
 Err_LinkToWorksheetInWorkbook:
     FailedReason = Err.Description
     Resume Exit_LinkToWorksheetInWorkbook
+    
 End Function
 
 'Export a table to one or more worksheets in case row count over 65535
