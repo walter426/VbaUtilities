@@ -19,6 +19,10 @@ AccessObjUtilities
 - Export Table to Text file
 - Convert Access Table into HTML Format
 
+ArrayUtilities
+- Find item in an array
+- Append items to an Array
+
 ExcelUtilities:
 - Check whether specified worksheet exists or not in specified workbook
 - Convert Column Number To Column Letter
