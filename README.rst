@@ -37,6 +37,8 @@ FileSysUtilities:
 - Unzip a file
 - Ftp upload file
 - Ftp download file
+- Count Row Number of a text file
+- Split a Text File into multiple text files of specified row count(default: 65535)
 - Replace multiple strings in multiple files in a folder
 - Replace multiple strings in a file
 

@@ -347,6 +347,193 @@ Function FTPDownload(sSite, sUsername, sPassword, sLocalPath, sRemotePath, sRemo
     Set oFTPScriptShell = Nothing
 End Function
 
+'Count Row Number of a text file
+Public Function CountRowsInText(file_name As String) As Long
+    On Error GoTo Err_CountRowsInText
+    
+    Dim fso As Object
+    Dim File As Object
+    
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    Set File = fso.OpenTextFile(file_name, 1)
+
+
+    Dim RowCnt As Long
+    Dim str_line As String
+    
+    RowCnt = 0
+
+    Do Until File.AtEndOfStream = True
+        RowCnt = RowCnt + 1
+        str_line = File.ReadLine
+        
+    Loop
+
+
+    File.Close
+
+
+Exit_CountRowsInText:
+    CountRowsInText = RowCnt
+    Exit Function
+
+Err_CountRowsInText:
+    RowCnt = -1
+    Call ShowMsgBox(Err.Description)
+    Resume Exit_CountRowsInText
+
+End Function
+
+'Split a Text File into multiple text files of specified row count(default: 65535)
+Public Function SplitTextFile(src As String, Optional des_fmt As String, Optional RowCntPerFile As Long = 65535, Optional file_idx_start As Integer = 0, Optional NumOfHdrRows As Long = 0, Optional DeleteSrc As Boolean = False) As String
+    On Error GoTo Err_SplitTextFile
+    
+    Dim FailedReason As String
+
+
+    If Len(Dir(src)) = 0 Then
+        FailedReason = src
+        GoTo Exit_SplitTextFile
+    End If
+
+    If RowCntPerFile < NumOfHdrRows + 1 Then
+        FailedReason = "RowCntPerFile < NumOfHdrRows + 1"
+        GoTo Exit_SplitTextFile
+    End If
+
+
+    'if no need to split, return
+    Dim RowCnt_src As Long
+    RowCnt_src = CountRowsInText(src)
+    
+    If RowCnt_src <= RowCntPerFile Then
+        GoTo Exit_SplitTextFile
+    End If
+    
+    
+    'Check whether there exists files which name is same to the splitted files
+    Dim fso As Object
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    
+    Dim des_dir As String
+    Dim des_name As String
+    Dim des_ext As String
+    Dim des_path As String
+    
+    des_dir = fso.GetParentFolderName(src)
+    des_name = fso.GetFileName(src)
+    des_ext = fso.GetExtensionName(src)
+
+    If des_fmt = "" Then
+        des_fmt = Left(des_name, Len(des_name) - Len("." & des_ext)) & "_*"
+    End If
+
+    
+    Dim NumOfSplit As Integer
+    
+    If RowCnt_src <= RowCntPerFile Then
+        NumOfSplit = 0
+    Else
+        NumOfSplit = Int((RowCnt_src - RowCntPerFile) / (RowCntPerFile + 1 - NumOfHdrRows)) + 1
+    End If
+    
+    
+    Dim file_idx_end As Integer
+    file_idx_end = file_idx_start + NumOfSplit 'Int(RowCnt_src / (RowCntPerFile + 1 - NumOfHdrRows))
+    
+    
+    Dim file_idx As Integer
+    
+    For file_idx = file_idx_start To file_idx_end
+        des_path = des_dir & "\" & Replace(des_fmt, "*", str(file_idx)) & "." & des_ext
+        
+        If Len(Dir(des_path)) > 0 Then
+            Exit For
+        End If
+        
+    Next file_idx
+    
+    
+    If Len(Dir(des_path)) > 0 Then
+        FailedReason = des_path
+        GoTo Exit_SplitTextFile
+    End If
+    
+    
+    
+    'Obtain header rows for later files and create the first splitted file
+    Dim File_src As Object
+    Dim FileNum_des As Integer
+    Dim str_line As String
+    Dim HdrRows As String
+
+    Set File_src = fso.OpenTextFile(src, 1)
+    des_path = des_dir & "\" & Replace(des_fmt, "*", str(file_idx_start)) & "." & des_ext
+    FileNum_des = FreeFile
+    Open des_path For Output As #FileNum_des
+    
+    RowCnt = 0
+    
+    Do Until RowCnt >= NumOfHdrRows Or File_src.AtEndOfStream = True
+        RowCnt = RowCnt + 1
+        str_line = File_src.ReadLine
+        Print #FileNum_des, str_line
+        HdrRows = HdrRows & str_line
+        
+    Loop
+
+    
+    Do Until RowCnt >= RowCntPerFile Or File_src.AtEndOfStream = True
+        RowCnt = RowCnt + 1
+        Print #FileNum_des, File_src.ReadLine
+        
+    Loop
+    
+    Close #FileNum_des
+    
+
+    'Start to split
+    For file_idx = file_idx_start + 1 To file_idx_end
+        If File_src.AtEndOfStream = True Then
+            Exit For
+        End If
+            
+        des_path = des_dir & "\" & Replace(des_fmt, "*", str(file_idx)) & "." & des_ext
+        FileNum_des = FreeFile
+        Open des_path For Output As #FileNum_des
+
+        RowCnt = NumOfHdrRows
+        Print #FileNum_des, HdrRows
+
+        Do Until RowCnt >= RowCntPerFile Or File_src.AtEndOfStream = True
+            RowCnt = RowCnt + 1
+            Print #FileNum_des, File_src.ReadLine
+            
+        Loop
+
+        Close #FileNum_des
+        
+    Next file_idx
+
+    
+    File_src.Close
+
+
+    If DeleteSrc = True Then
+        Kill src
+    End If
+    
+    
+Exit_SplitTextFile:
+    SplitTextFile = FailedReason
+    Exit Function
+
+Err_SplitTextFile:
+    FailedReason = Err.Description
+    Resume Exit_SplitTextFile
+    
+End Function
+
 'Replace multiple strings in multiple files in a folder
 Sub ReplaceStrInFolder(folder_name As String, Arr_f As Variant, Arr_r As Variant, Optional StartRow As Long = 0)
     On Error GoTo Err_ReplaceStrInFolder
