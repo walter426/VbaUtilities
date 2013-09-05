@@ -239,7 +239,10 @@ Public Function FTPUpload(sSite, sUsername, sPassword, sLocalFile, sRemotePath, 
     oFTPScriptFSO.DeleteFile (sFTPResults)
     
     Set oFTPScriptFSO = Nothing
+    
+    oFTPScriptShell.CurrentDirectory = sOriginalWorkingDirectory
     Set oFTPScriptShell = Nothing
+    
 End Function
 
 'Ftp download file
@@ -344,7 +347,10 @@ Function FTPDownload(sSite, sUsername, sPassword, sLocalPath, sRemotePath, sRemo
     oFTPScriptFSO.DeleteFile (sFTPResults)
     
     Set oFTPScriptFSO = Nothing
+    
+    oFTPScriptShell.CurrentDirectory = sOriginalWorkingDirectory
     Set oFTPScriptShell = Nothing
+    
 End Function
 
 'Count Row Number of a text file
@@ -534,6 +540,73 @@ Err_SplitTextFile:
     
 End Function
 
+'Delete rows in a text file
+Public Function DeleteRowInText(file_name As String, StartRow As Long, EndRow As Long) As String
+    On Error GoTo Err_DeleteRowInText
+    
+    Dim FailedReason As String
+    
+    If EndRow < StartRow Then
+        EndRow = StartRow
+    End If
+    
+    Dim temp_file_name As String
+    temp_file_name = file_name & "_temp"
+    
+    On Error Resume Next
+    Kill temp_file_name
+    On Error GoTo Err_DeleteRowInText
+    
+    Dim temp_file_PortNum As Integer
+    temp_file_PortNum = FreeFile
+    
+    Open temp_file_name For Output As #temp_file_PortNum
+    
+    Dim fso As Object
+    Dim File As Object
+    
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    Set File = fso.OpenTextFile(file_name, 1)
+
+    Dim row As Long
+    Dim str_line As String
+    
+    row = 0
+
+    Do Until File.AtEndOfStream = True 'EOF(2)
+        row = row + 1
+        
+        str_line = File.ReadLine
+    
+        If row >= StartRow And row <= EndRow Then
+            GoTo Loop_DeleteRowInText_1
+        End If
+        
+        Print #temp_file_PortNum, str_line
+        
+Loop_DeleteRowInText_1:
+    Loop
+
+    File.Close
+    
+    Close #temp_file_PortNum
+    
+    Kill file_name
+    
+    Name temp_file_name As file_name
+    
+
+Exit_DeleteRowInText:
+    DeleteRowInText = FailedReason
+    Exit Function
+    
+Err_DeleteRowInText:
+    FailedReason = Err.Description
+    GoTo Exit_DeleteRowInText
+    
+End Function
+
+
 'Replace multiple strings in multiple files in a folder
 Sub ReplaceStrInFolder(folder_name As String, Arr_f As Variant, Arr_r As Variant, Optional StartRow As Long = 0)
     On Error GoTo Err_ReplaceStrInFolder
@@ -623,4 +696,3 @@ Err_ReplaceStrInFile:
     Call ShowMsgBox(Err.Description)
     GoTo Exit_ReplaceStrInFile
 End Sub
-
