@@ -196,7 +196,7 @@ Err_RemoveLink:
     
 End Function
 
-'Get the current path of the link table
+'Get the current path of a link table
 Public Function GetLinkTblPath(Tbl_name As String) As String
     On Error GoTo Exit_GetLinkTblPath
     
