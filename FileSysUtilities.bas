@@ -608,8 +608,10 @@ End Function
 
 
 'Replace multiple strings in multiple files in a folder
-Sub ReplaceStrInFolder(folder_name As String, Arr_f As Variant, Arr_r As Variant, Optional StartRow As Long = 0)
+Function ReplaceStrInFolder(folder_name As String, Arr_f As Variant, Arr_r As Variant, Optional StartRow As Long = 0) As String
     On Error GoTo Err_ReplaceStrInFolder
+    
+    Dim FailedReason As String
     
     Dim file_name As String
         
@@ -622,16 +624,20 @@ Sub ReplaceStrInFolder(folder_name As String, Arr_f As Variant, Arr_r As Variant
     Loop
 
 Exit_ReplaceStrInFolder:
-    Exit Sub
+    ReplaceStrInFolder = FailedReason
+    Exit Function
     
 Err_ReplaceStrInFolder:
-    Call ShowMsgBox(Err.Description)
+    FailedReason = Err.Description
     GoTo Exit_ReplaceStrInFolder
-End Sub
+    
+End Function
 
 'Replace multiple strings in a file
-Sub ReplaceStrInFile(file_name As String, Arr_f As Variant, Arr_r As Variant, Optional StartRow As Long = 0)
+Function ReplaceStrInFile(file_name As String, Arr_f As Variant, Arr_r As Variant, Optional StartRow As Long = 0) As String
     On Error GoTo Err_ReplaceStrInFile
+    
+    Dim FailedReason As String
     
     Dim temp_file_name As String
     temp_file_name = file_name & "_temp"
@@ -690,9 +696,11 @@ Loop_ReplaceStrInFile_1:
     
 
 Exit_ReplaceStrInFile:
-    Exit Sub
+    ReplaceStrInFile = FailedReason
+    Exit Function
     
 Err_ReplaceStrInFile:
-    Call ShowMsgBox(Err.Description)
+    FailedReason = Err.Description
     GoTo Exit_ReplaceStrInFile
-End Sub
+    
+End Function

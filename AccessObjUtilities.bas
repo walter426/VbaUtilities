@@ -196,6 +196,27 @@ Err_RemoveLink:
     
 End Function
 
+'Get the current path of the link table
+Public Function GetLinkTblPath(Tbl_name As String) As String
+    On Error GoTo Exit_GetLinkTblPath
+    
+    Dim LinkTblPath As String
+    
+    LinkTblPath = CurrentDb.TableDefs(Tbl_name).Connect
+    LinkTblPath = Right(LinkTblPath, Len(LinkTblPath) - (InStr(1, LinkTblPath, "DATABASE=") + 8)) & "\" & CurrentDb.TableDefs(Tbl_name).SourceTableName
+    
+    GetLinkTblPath = LinkTblPath
+    
+Exit_GetLinkTblPath:
+    Exit Function
+
+Err_GetLinkTblPath:
+    ShowMsgBox (Err.Description)
+    GetLinkTblPath = ""
+    Resume Exit_GetLinkTblPath
+    
+End Function
+
 'Obtain a string with all columns names of a table
 Public Function ObtainTblFldNameStr(Tbl_name As String)
     If TableExist(Tbl_name) = False Then
@@ -262,26 +283,32 @@ Exit_FindColInTbl:
     Exit Function
 End Function
 
-'Export Access Table to Text file
-Public Sub ExportTableToTxt(Tbl_name As String, OutputPathFile As String, Delim As String, HasFldName As Boolean)
-    If OutputPathFile = "" Or Tbl_name = "" Then
-        Exit Sub
+'Export Table to Text file
+Public Function ExportTableToTxt(Tbl_name As String, des As String, Optional Delim As String = " ", Optional HasFldName As Boolean = True, Optional NullStr As String = "", Optional DateFmt As String = "MM/DD/YY", Optional TimeFmt As String = "h:mm") As String
+    On Error GoTo Err_ExportTableToTxt
+    
+    Dim FailedReason As String
+    
+    If des = "" Or Tbl_name = "" Then
+        FailedReason = "Input is invalid"
+        GoTo Exit_ExportTableToTxt
     End If
     
     If TableExist(Tbl_name) = False Then
-        Exit Sub
+        FailedReason = Tbl_name & " does not exist"
+        GoTo Exit_ExportTableToTxt
     End If
     
     If Delim = "" Then
         Delim = " "
     End If
 
-    'If Dir(OutputPathFile, vbDirectory) = "" Then
-    '    Exit Sub
-    'End If
-
-    Open OutputPathFile For Output As #1
     
+    Dim des_PortNum As Integer
+    des_PortNum = FreeFile
+
+    Open des For Output As #des_PortNum
+
     With CurrentDb
         Dim line As String
         line = ""
@@ -297,7 +324,7 @@ Public Sub ExportTableToTxt(Tbl_name As String, OutputPathFile As String, Delim 
             Next
             
             line = Left(line, Len(line) - Len(Delim))
-            Print #1, line
+            Print #des_PortNum, line
         End If
         
         
@@ -315,91 +342,48 @@ Public Sub ExportTableToTxt(Tbl_name As String, OutputPathFile As String, Delim 
                 line = ""
                 
                 For FldIdx = 0 To .Fields.count - 1
-                    If .Fields(FldIdx).Type = dbDate Then
-                        fld_str = Format(str(.Fields(FldIdx).Value), "MM/DD/YY")
+                    If IsNull(.Fields(FldIdx)) = True Then
+                        fld_str = NullStr
+                    
+                    ElseIf .Fields(FldIdx).Type = dbDate Then
+                        If .Fields(FldIdx).Value > 1 Then
+                            fld_str = Format(str(.Fields(FldIdx).Value), DateFmt)
+                        Else
+                            fld_str = Format(str(.Fields(FldIdx).Value), TimeFmt)
+                        End If
+                        
                     Else
                         fld_str = .Fields(FldIdx).Value
+                        
                     End If
                     
-                    If Len(fld_str) = 0 Then
-                        fld_str = "0"
-                    End If
                     
                     line = line & fld_str & Delim
+                    
                 Next
                 
                 line = Left(line, Len(line) - Len(Delim))
-                Print #1, line
+                Print #des_PortNum, line
                 
                 .MoveNext
+                
             Loop
+            
         End With 'RS_Tbl
-    End With 'CurrentDb
-    
-    Close
-    
-End Sub
-
-'Convert Access Table into HTML Format
-Public Function ConvertTblToHtml(Tbl_name As String, Html As String) As String
-    On Error GoTo Err_ConvertTblToHtml
-    
-    Dim FailedReason As String
-    
-    If TableValid(Tbl_name) = False Then
-        FailedReason = Tbl_name & "is not valid"
-        GoTo Exit_ConvertTblToHtml
-    End If
-    
-
-    Html = Html & "<table border = ""1"", style = ""font-size:9pt;"">" & vbCrLf
-
-    
-    Dim RS_Tbl As DAO.Recordset
-    Set RS_Tbl = CurrentDb.OpenRecordset(Tbl_name)
-    
-    'Create table
-    With RS_Tbl
-        Dim fld_idx As Integer
-    
-        'Create header
-        Html = Html & "<tr>" & vbCrLf
         
-        For fld_idx = 0 To .Fields.count - 1
-            Html = Html & "<th bgcolor = #c0c0c0>" & .Fields(fld_idx).Name & "</th>" & vbCrLf
-        Next fld_idx 'For fld_idx = 0 To .Fields.count - 1
-        
-        Html = Html & "</tr>"
-        
-        
-        'Create rows
-        .MoveFirst
-        
-        Do Until .EOF
-            Html = Html & "<tr>" & vbCrLf
-            
-            For fld_idx = 0 To .Fields.count - 1
-                Html = Html & "<td>" & .Fields(fld_idx).Value & "</td>" & vbCrLf
-            Next fld_idx 'For fld_idx = 0 To .Fields.count - 1
-            
-            Html = Html & "</tr>" & vbCrLf
-            
-            .MoveNext
-        Loop
-
         .Close
         
-    End With 'RS_TblD
+    End With 'CurrentDb
     
-    
-    Html = Html & "</table>"
-    
-    
-Exit_ConvertTblToHtml:
-    ConvertTblToHtml = FailedReason
+    Close #des_PortNum
+
+
+Exit_ExportTableToTxt:
+    ExportTableToTxt = FailedReason
     Exit Function
 
-Err_ConvertTblToHtml:
+Err_ExportTableToTxt:
     FailedReason = Err.Description
-    Resume Exit_ConvertTblToHtml
+    Resume Exit_ExportTableToTxt
+        
 End Function

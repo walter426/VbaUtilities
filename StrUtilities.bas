@@ -71,13 +71,14 @@ Public Function Replace_RE(str As String, Pattern_f As String, substr_r As Strin
         .Pattern = Pattern_f
         
         Replace_RE = .Replace(str, substr_r)
+        
     End With
     
 Exit_Replace_RE:
     Exit Function
 
 Err_Replace_RE:
-    FailedReason = Err.Description
+    ShowMsgBox (Err.Description)
     Resume Exit_Replace_RE
 End Function
 
