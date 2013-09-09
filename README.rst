@@ -14,6 +14,9 @@ AccessObjUtilities
 - Obtain record count of a query
 - Obtain record count of a SQL object
 - Check whether a table is valid or not
+- Remove all link tables
+- Get the current path of a link table
+- Get Link Table connection Info
 - Obtain a string with all columns names of a table
 - Find a column in a table
 - Export Table to Text file
@@ -39,6 +42,7 @@ FileSysUtilities:
 - Ftp download file
 - Count Row Number of a text file
 - Split a Text File into multiple text files of specified row count(default: 65535)
+- Delete rows in a text file
 - Replace multiple strings in multiple files in a folder
 - Replace multiple strings in a file
 

@@ -217,6 +217,38 @@ Err_GetLinkTblPath:
     
 End Function
 
+'Get Link Table connection Info
+Public Function GetLinkTblConnInfo(Tbl_name As String, param As String) As String
+    On Error GoTo Exit_GetLinkTblConnInfo
+    
+    Dim LinkTblConnInfo As Variant
+    LinkTblConnInfo = SplitStrIntoArray(CurrentDb.TableDefs(Tbl_name).Connect, ";")
+
+    Dim param_idx As Integer
+    Dim LinkTblConnParam As String
+    
+    param = param & "="
+
+    For param_idx = 0 To UBound(LinkTblConnInfo)
+        LinkTblConnParam = LinkTblConnInfo(param_idx)
+
+        If Left(LinkTblConnParam, Len(param)) = param Then
+            GetLinkTblConnInfo = Right(LinkTblConnParam, Len(LinkTblConnParam) - Len(param))
+            Exit For
+        End If
+    Next param_idx
+    
+    
+Exit_GetLinkTblConnInfo:
+    Exit Function
+
+Err_GetLinkTblConnInfo:
+    ShowMsgBox (Err.Description)
+    GetLinkTblConnInfo = ""
+    Resume Exit_GetLinkTblConnInfo
+    
+End Function
+
 'Obtain a string with all columns names of a table
 Public Function ObtainTblFldNameStr(Tbl_name As String)
     If TableExist(Tbl_name) = False Then
