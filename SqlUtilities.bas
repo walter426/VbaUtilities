@@ -678,14 +678,12 @@ Public Function CreateTbl_ConcatTwoTbl(Tbl_src_1_name As String, Type_1 As Strin
     Dim SQL_Seq_Type_2 As String
     
         
-    If Type_1 = "" Or Type_2 = "" Then
+        Dim SQL_Seq_Type_1 As String
+      
+    If Type_1 = "" Then
         SQL_Seq_Type_1 = ""
-        SQL_Seq_Type_2 = ""
-    
     Else
         SQL_Seq_Type_1 = Chr(34) & Type_1 & Chr(34) & " AS [Type], "
-        SQL_Seq_Type_2 = Chr(34) & Type_2 & Chr(34) & " AS [Type], "
-        
     End If
         
 
@@ -707,6 +705,14 @@ Public Function CreateTbl_ConcatTwoTbl(Tbl_src_1_name As String, Type_1 As Strin
     
     RunSQL_CmdWithoutWarning (SQL_cmd)
     
+    
+    Dim SQL_Seq_Type_2 As String
+    
+    If Type_2 = "" Then
+        SQL_Seq_Type_2 = ""
+    Else
+        SQL_Seq_Type_2 = Chr(34) & Type_2 & Chr(34) & " AS [Type], "
+    End If
     
     SQL_cmd = "INSERT INTO " & Tbl_output_name & " " & vbCrLf & _
                  "SELECT " & SQL_Seq_Type_2 & "[" & Tbl_src_2_name & "].* " & vbCrLf & _
