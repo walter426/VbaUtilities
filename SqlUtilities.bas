@@ -500,6 +500,13 @@ Public Function CreateTbls_Group(Tbl_MT_name As String) As String
                     Str_Col_Order = .Fields("Col_Order").Value
                 End If
                 
+                If IsNull(.Fields("Cond").Value) = True Then
+                    SQL_Seg_Where = ""
+                Else
+                    SQL_Seg_Where = .Fields("Cond").Value
+                End If
+
+                
                 FailedReason_1 = CreateTbl_Group(Tbl_src_name, Tbl_Group_name, .Fields("Col_Group").Value, Str_GroupFunc_all:=Str_GroupFunc_all, GF_all_dbTypes:=GF_all_dbTypes, GroupFunc_Col_Pairs:=GroupFunc_Col_Pairs, Str_Col_Order:=Str_Col_Order)
                 
                 If FailedReason_1 <> "" Then
@@ -654,81 +661,85 @@ Err_CreateTbl_JoinTwoTbl:
     
 End Function
 
-'Create table which is cancatenated from two tables of the same structure
-Public Function CreateTbl_ConcatTwoTbl(Tbl_src_1_name As String, Type_1 As String, Tbl_src_2_name As String, Type_2 As String, Tbl_output_name As String) As String
-    On Error GoTo Err_CreateTbl_ConcatTwoTbl
+'Create table which is cancatenated from multiple tables of the same structure
+Public Function CreateTbl_ConcatTbls(Tbl_src_Set As Variant, Tbl_des_name As String, Optional Type_Set As Variant = "") As String
+    On Error GoTo Err_CreateTbl_ConcatTbls
     
     Dim FailedReason As String
 
-    If TableExist(Tbl_src_1_name) = False Then
-        FailedReason = Tbl_src_1_name & "does not exist!"
-        GoTo Exit_CreateTbl_ConcatTwoTbl
+    If UBound(Tbl_src_Set) < 0 Then
+        FailedReason = "No table in the table set"
+        GoTo Exit_CreateTbl_ConcatTbls
     End If
-
-
-    If TableExist(Tbl_src_2_name) = False Then
-        FailedReason = Tbl_src_2_name & "does not exist!"
-        GoTo Exit_CreateTbl_ConcatTwoTbl
-    End If
-
-    DelTable (Tbl_output_name)
 
     
-    Dim SQL_Seq_Type_1 As String
-    Dim SQL_Seq_Type_2 As String
+    Dim Tbl_src_name As Variant
     
-        
-        Dim SQL_Seq_Type_1 As String
-      
-    If Type_1 = "" Then
-        SQL_Seq_Type_1 = ""
-    Else
-        SQL_Seq_Type_1 = Chr(34) & Type_1 & Chr(34) & " AS [Type], "
-    End If
-        
+    For Each Tbl_src_name In Tbl_src_Set
+        If TableExist(Tbl_src_name & "") = False Then
+            FailedReason = Tbl_src_name & " does not exist!"
+            GoTo Exit_CreateTbl_ConcatTbls
+        End If
+    
+    Next
+    
 
+    'Initialize Tbl_des
+    DelTable (Tbl_des_name)
+    
     Dim SQL_cmd As String
     
-    SQL_cmd = "SELECT " & Chr(34) & "null" & Chr(34) & " AS [Type], " & Tbl_src_1_name & ".* " & vbCrLf & _
-                "INTO " & Tbl_output_name & " " & vbCrLf & _
-                "FROM " & Tbl_src_1_name & " " & vbCrLf & _
+    Tbl_src_name = Tbl_src_Set(0)
+    
+    SQL_cmd = "SELECT " & Chr(34) & "null" & Chr(34) & " AS [Type], " & Tbl_src_name & ".* " & vbCrLf & _
+                "INTO " & Tbl_des_name & " " & vbCrLf & _
+                "FROM " & Tbl_src_name & " " & vbCrLf & _
                 "WHERE 1 = 0 " & vbCrLf & _
                 ";"
                 
     RunSQL_CmdWithoutWarning (SQL_cmd)
 
+
+    'Start Append
+    Dim tbl_idx As Integer
+    Dim SQL_Seq_Type As String
     
-    SQL_cmd = "INSERT INTO " & Tbl_output_name & " " & vbCrLf & _
-                "SELECT " & SQL_Seq_Type_1 & "[" & Tbl_src_1_name & "].* " & vbCrLf & _
-                "FROM [" & Tbl_src_1_name & "] " & vbCrLf & _
-                ";"
+    For tbl_idx = 0 To UBound(Tbl_src_Set)
+        Tbl_src_name = Tbl_src_Set(tbl_idx)
+        
+        If VarType(Type_Set) > vbArray And Type_Set(tbl_idx) = "" Then
+            SQL_Seq_Type = ""
+        Else
+            SQL_Seq_Type = Chr(34) & Type_Set(tbl_idx) & Chr(34) & " AS [Type], "
+        End If
+        
+        SQL_cmd = "INSERT INTO " & Tbl_des_name & " " & vbCrLf & _
+                    "SELECT " & SQL_Seq_Type & "[" & Tbl_src_name & "].* " & vbCrLf & _
+                    "FROM [" & Tbl_src_name & "] " & vbCrLf & _
+                    ";"
+        
+        RunSQL_CmdWithoutWarning (SQL_cmd)
+        
+    Next
     
-    RunSQL_CmdWithoutWarning (SQL_cmd)
     
-    
-    Dim SQL_Seq_Type_2 As String
-    
-    If Type_2 = "" Then
-        SQL_Seq_Type_2 = ""
-    Else
-        SQL_Seq_Type_2 = Chr(34) & Type_2 & Chr(34) & " AS [Type], "
+    If UBound(Type_Set) < 0 Then
+        SQL_cmd = "ALTER TABLE [" & Tbl_des_name & "] " & vbCrLf & _
+                    "DROP COLUMN [Type]" & vbCrLf & _
+                    ";"
+ 
+        RunSQL_CmdWithoutWarning (SQL_cmd)
+        
     End If
     
-    SQL_cmd = "INSERT INTO " & Tbl_output_name & " " & vbCrLf & _
-                 "SELECT " & SQL_Seq_Type_2 & "[" & Tbl_src_2_name & "].* " & vbCrLf & _
-                "FROM [" & Tbl_src_2_name & "] " & vbCrLf & _
-                ";"
     
-    RunSQL_CmdWithoutWarning (SQL_cmd)
-
-    
-Exit_CreateTbl_ConcatTwoTbl:
-    CreateTbl_ConcatTwoTbl = FailedReason
+Exit_CreateTbl_ConcatTbls:
+    CreateTbl_ConcatTbls = FailedReason
     Exit Function
 
-Err_CreateTbl_ConcatTwoTbl:
+Err_CreateTbl_ConcatTbls:
     FailedReason = Err.Description
-    Resume Exit_CreateTbl_ConcatTwoTbl
+    Resume Exit_CreateTbl_ConcatTbls
     
 End Function
 

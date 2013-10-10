@@ -59,7 +59,7 @@ SqlUtilities:
 - Create Table of group function, there is a default Group function for all columns, columns can be specified to different group fucntion
 - Create a set of grouped table, the grouping config is set in a specified table
 - Create table which are joined from two tables having the same columns for joining
-- Create table which is cancatenated from two tables of the same structure
+- Create table which is cancatenated from multiple tables of the same structure
 
 StrUtilities:
 - Split a string into array by separator
