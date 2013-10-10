@@ -110,7 +110,7 @@ Public Function LinkToWorksheetInWorkbook(Wb_path As String, ByVal SheetNameList
                     
                     WsInS_cnt = 0
                 
-                    For WsInS_idx = ShtSeries_start_idx To ShtSeries_start_idx
+                    For WsInS_idx = ShtSeries_start_idx To ShtSeries_end_idx
                         If WorkSheetExist(oWb, Replace(ShtSeries_name, "*", WsInS_idx)) = True Then
                             WsInS_cnt = WsInS_cnt + 1
                         Else
