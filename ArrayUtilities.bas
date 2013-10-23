@@ -55,3 +55,16 @@ Err_AppendArray:
     Resume Exit_AppendArray
     
 End Function
+
+Public Sub DeleteArrayItem(arr As Variant, index As Long)
+    Dim i As Long
+    
+    For i = index To UBound(arr) - 1
+        arr(i) = arr(i + 1)
+    Next
+    
+    ' VB will convert this to 0 or to an empty string.
+    arr(UBound(arr)) = Empty
+    ReDim Preserve arr(0 To UBound(arr) - 1)
+    
+End Sub
