@@ -25,7 +25,7 @@ Public Function FindItemInArray(Array_src As Variant, item As String) As Long
 
     Dim i As Long
     
-    For i = 0 To UBound(Array_src)
+    For i = LBound(Array_src) To UBound(Array_src)
         If Array_src(i) = item Then
             FindItemInArray = i
             Exit For
@@ -40,8 +40,8 @@ Public Function AppendArray(Array_src As Variant, Array_append As Variant) As St
 
     Dim i As Long
     
-    For i = 0 To UBound(Array_append)
-        ReDim Preserve Array_src(0 To UBound(Array_src) + 1)
+    For i = LBound(Array_append) To UBound(Array_append)
+        ReDim Preserve Array_src(LBound(Array_src) To UBound(Array_src) + 1)
         Array_src(UBound(Array_src)) = Array_append(i)
     Next i
 
@@ -65,6 +65,6 @@ Public Sub DeleteArrayItem(arr As Variant, index As Long)
     
     ' VB will convert this to 0 or to an empty string.
     arr(UBound(arr)) = Empty
-    ReDim Preserve arr(0 To UBound(arr) - 1)
+    ReDim Preserve arr(LBound(arr) To UBound(arr) - 1)
     
 End Sub
