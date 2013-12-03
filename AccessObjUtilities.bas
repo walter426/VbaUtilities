@@ -485,13 +485,13 @@ Err_ConvertTblToHtml:
     
 End Function
 
-'Concatenate releated records in a table (SQL Query Use)
+'Generate a concatenated string of related records (SQL Query Use)
 Public Function ConcatRelated(strField As String, _
     strTable As String, _
     Optional strWhere As String, _
     Optional strOrderBy As String, _
     Optional strSeparator = ", ") As Variant
-On Error GoTo Err_Handler
+On Error GoTo Err_ConcatRelated
     'Purpose:   Generate a concatenated string of related records.
     'Return:    String variant, or Null if no matches.
     'Arguments: strField = name of field to get results from and concatenate.
@@ -551,14 +551,14 @@ On Error GoTo Err_Handler
         ConcatRelated = Left(strOut, lngLen)
     End If
 
-Exit_Handler:
+Exit_ConcatRelated:
     'Clean up
     Set rsMV = Nothing
     Set rs = Nothing
     Exit Function
 
-Err_Handler:
+Err_ConcatRelated:
     Call ShowMsgBox("Error " & Err.Number & ": " & Err.Description, vbExclamation, "ConcatRelated()")
-    Resume Exit_Handler
+    Resume Exit_ConcatRelated
     
 End Function
