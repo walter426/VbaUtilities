@@ -21,10 +21,11 @@ AccessObjUtilities
 - Find a column in a table
 - Export Table to Text file
 - Convert Access Table into HTML Format
+- Concatenate releated records in a table (SQL Query Use)
 
 ArrayUtilities
 - Find item in an array
-- Append items to an Array
+- Append items to an array
 
 ExcelUtilities:
 - Check whether specified worksheet exists or not in specified workbook
