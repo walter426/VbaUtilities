@@ -18,6 +18,12 @@
 Attribute VB_Name = "MathUtilities"
 Option Compare Database
 
+'Ceiling
+Public Function Ceiling(X)
+    Ceiling = Int(X) - (X - Int(X) > 0)
+End Function
+
+'Log on base 10
 Public Function Log10(X)
     Log10 = Log(X) / Log(10#)
 End Function
