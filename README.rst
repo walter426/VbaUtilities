@@ -47,6 +47,10 @@ FileSysUtilities:
 - Replace multiple strings in multiple files in a folder
 - Replace multiple strings in a file
 
+MathUtilities:
+- Ceiling
+- Logarithm of base 10
+
 ShellUtilities:
 - Start a Shell command and wait for it to finish, hiding while it is running.
 - Send multiples shell commands with timeout
