@@ -182,6 +182,13 @@ Public Function CreateTbl_ColAndExpr(Tbl_src_name As String, Str_Col_Id As Strin
     Next Col_Idx
     
     
+    If SQL_Seg_ColAndExpr <> "" Then
+        SQL_Seg_Select = SQL_Seg_Select & SQL_Seg_ColAndExpr
+    Else
+        SQL_Seg_Select = Left(SQL_Seg_Select, Len(SQL_Seg_Select) - 2)
+    End If
+    
+    
     SQL_Seg_Select = SQL_Seg_Select & SQL_Seg_ColAndExpr
     
     
