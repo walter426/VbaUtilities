@@ -171,17 +171,48 @@ Public Function QueryValid(Qryname As String) As Boolean
     
 End Function
 
+'Link Table Through Table Definition
+Public Function LinkTblByTdf(Tbl_src_name As String, Tbl_des_name As String, str_conn As String) As String
+    On Error GoTo Err_LinkTblByTdf
+    
+    Dim FailedReason As String
+    
+    DelTable (Tbl_des_name)
+        
+    With CurrentDb
+        Dim tdf As TableDef
+        Set tdf = .CreateTableDef(Tbl_des_name)
+
+        tdf.Connect = str_conn
+        tdf.SourceTableName = Tbl_src_name
+        
+        .TableDefs.Append tdf
+        
+    End With 'CurrentDb
+        
+    RefreshDatabaseWindow
+
+Exit_LinkTblByTdf:
+    LinkTblByTdf = FailedReason
+    Exit Function
+
+Err_LinkTblByTdf:
+    FailedReason = Err.Description
+    Resume Exit_LinkTblByTdf
+    
+End Function
+
+
 'Remove all link tables
 Public Function RemoveLink() As String
     On Error GoTo Err_RemoveLink
     
     Dim FailedReason As String
     
-    Dim dbs As Database, tdf As TableDef
-    ' Return Database variable that points to current database.
-    Set dbs = CurrentDb
-    For Each tdf In dbs.TableDefs
-        If (tdf.Attributes = dbAttachedTable) Then
+    Dim tdf As TableDef
+
+    For Each tdf In CurrentDb.TableDefs
+        If tdf.Attributes = dbAttachedTable Or tdf.Attributes = dbAttachedODBC Then
             DoCmd.DeleteObject acTable, tdf.Name
         End If
     Next tdf

@@ -750,3 +750,89 @@ Err_CreateTbl_ConcatTbls:
     
 End Function
 
+'Append Table into a SQLite database
+Public Function AppendTblToSQLite(Tbl_src_name As String, Tbl_des_name As String) As String
+    On Error GoTo Err_AppendTblToSQLite
+    
+    Dim FailedReason As String
+    
+    If TableExist(Tbl_src_name) = False Then
+        FailedReason = Tbl_src_name
+        GoTo Exit_AppendTblToSQLite
+    End If
+    
+    If TableExist(Tbl_des_name) = False Then
+        FailedReason = Tbl_des_name
+        GoTo Exit_AppendTblToSQLite
+    End If
+    
+    
+    'Create Db
+    Dim TempDb_path As String
+    TempDb_path = [CurrentProject].[Path] & "\TempDb.mdb"
+    
+    If FileExists(TempDb_path) = True Then
+        Kill TempDb_path
+    End If
+    
+    Call CreateDatabase(TempDb_path, dbLangGeneral)
+
+    
+    'Copy Table into the TempDb
+    SQL_cmd = "SELECT * " & vbCrLf & _
+                "INTO [" & Tbl_des_name & "]" & vbCrLf & _
+                "IN '" & TempDb_path & "'" & vbCrLf & _
+                "FROM [" & Tbl_src_name & "] " & vbCrLf & _
+                ";"
+    
+    RunSQL_CmdWithoutWarning (SQL_cmd)
+
+
+    'Convert TempDb into SQLite
+    Dim SQLiteDb_path As String
+    SQLiteDb_path = [CurrentProject].[Path] & "\TempDb.sqlite"
+    
+    If FileExists(SQLiteDb_path) = True Then
+        Kill SQLiteDb_path
+    End If
+    
+    Dim ShellCmd As String
+    ShellCmd = "java -jar " & [CurrentProject].[Path] & "\mdb-sqlite.jar " & TempDb_path & " " & SQLiteDb_path
+    Call ShellAndWait(ShellCmd, vbHide)
+    
+
+    'Create a SQLite Command file, and then parse it into the Python SQLite Command Parser for appending into the SQLite Db
+    Dim SQLiteCmdFile_path As String
+    Dim iFileNum_SQLiteCmd As Integer
+    
+    SQLiteCmdFile_path = [CurrentProject].[Path] & "\" & "SQLiteCmd.txt"
+    iFileNum_SQLiteCmd = FreeFile()
+    
+    If FileExists(SQLiteCmdFile_path) = True Then
+        Kill SQLiteCmdFile_path
+    End If
+    
+    Open SQLiteCmdFile_path For Output As iFileNum_SQLiteCmd
+    
+    Print #iFileNum_SQLiteCmd, "ATTACH """ & SQLiteDb_path & """ AS TempDb;"
+    Print #iFileNum_SQLiteCmd, "INSERT INTO [" & Tbl_des_name & "] SELECT * FROM TempDb.[" & Tbl_des_name & "];"
+    
+    Close #iFileNum_SQLiteCmd
+    
+    ShellCmd = "python " & [CurrentProject].[Path] & "\SQLiteCmdParser.py " & GetLinkTblConnInfo(Tbl_des_name, "DATABASE") & " " & SQLiteCmdFile_path
+    Call ShellAndWait(ShellCmd, vbHide)
+
+    Kill SQLiteCmdFile_path
+    Kill SQLiteDb_path
+    Kill TempDb_path
+
+
+Exit_AppendTblToSQLite:
+    AppendTblToSQLite = FailedReason
+    Exit Function
+
+Err_AppendTblToSQLite:
+    Call ShowMsgBox(Err.Description)
+    Resume Exit_AppendTblToSQLite
+    
+End Function
