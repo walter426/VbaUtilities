@@ -750,6 +750,50 @@ Err_CreateTbl_ConcatTbls:
     
 End Function
 
+'Execute SQLite Command Set
+Public Function ExecuteSQLiteCmdSet(SQLiteDb_path As String, CmdSet As String) As String
+    On Error GoTo Err_ExecuteSQLiteCmdSet
+    
+    Dim FailedReason As String
+
+    If FileExists(SQLiteDb_path) = False Then
+        FailedReason = SQLiteDb_path
+        GoTo Exit_ExecuteSQLiteCmdSet
+    End If
+    
+    
+    'Create a SQLite Command file, and then parse it into the Python SQLite Command Parser for execution
+    Dim SQLiteCmdFile_path As String
+    Dim iFileNum_SQLiteCmd As Integer
+    
+    SQLiteCmdFile_path = [CurrentProject].[Path] & "\" & "SQLiteCmd.txt"
+    iFileNum_SQLiteCmd = FreeFile()
+    
+    If FileExists(SQLiteCmdFile_path) = True Then
+        Kill SQLiteCmdFile_path
+    End If
+    
+    Open SQLiteCmdFile_path For Output As iFileNum_SQLiteCmd
+    Print #iFileNum_SQLiteCmd, CmdSet
+    Close #iFileNum_SQLiteCmd
+    
+    ShellCmd = "python " & [CurrentProject].[Path] & "\SQLiteCmdParser.py " & SQLiteDb_path & " " & SQLiteCmdFile_path
+    Call ShellAndWait(ShellCmd, vbHide)
+
+    Kill SQLiteCmdFile_path
+
+
+Exit_ExecuteSQLiteCmdSet:
+    ExecuteSQLiteCmdSet = FailedReason
+    Exit Function
+
+Err_ExecuteSQLiteCmdSet:
+    Call ShowMsgBox(Err.Description)
+    Resume Exit_ExecuteSQLiteCmdSet
+    
+End Function
+
+
 'Append Table into a SQLite database
 Public Function AppendTblToSQLite(Tbl_src_name As String, Tbl_des_name As String) As String
     On Error GoTo Err_AppendTblToSQLite
@@ -779,6 +823,8 @@ Public Function AppendTblToSQLite(Tbl_src_name As String, Tbl_des_name As String
 
     
     'Copy Table into the TempDb
+    Dim SQL_cmd As String
+    
     SQL_cmd = "SELECT * " & vbCrLf & _
                 "INTO [" & Tbl_des_name & "]" & vbCrLf & _
                 "IN '" & TempDb_path & "'" & vbCrLf & _
@@ -800,29 +846,11 @@ Public Function AppendTblToSQLite(Tbl_src_name As String, Tbl_des_name As String
     ShellCmd = "java -jar " & [CurrentProject].[Path] & "\mdb-sqlite.jar " & TempDb_path & " " & SQLiteDb_path
     Call ShellAndWait(ShellCmd, vbHide)
     
-
-    'Create a SQLite Command file, and then parse it into the Python SQLite Command Parser for appending into the SQLite Db
-    Dim SQLiteCmdFile_path As String
-    Dim iFileNum_SQLiteCmd As Integer
+    SQL_cmd = "ATTACH """ & SQLiteDb_path & """ AS TempDb;" & vbCrLf & _
+                "INSERT INTO [" & Tbl_des_name & "] SELECT * FROM TempDb.[" & Tbl_des_name & "];"
     
-    SQLiteCmdFile_path = [CurrentProject].[Path] & "\" & "SQLiteCmd.txt"
-    iFileNum_SQLiteCmd = FreeFile()
+    Call ExecuteSQLiteCmdSet(GetLinkTblConnInfo(Tbl_des_name, "DATABASE"), SQL_cmd)
     
-    If FileExists(SQLiteCmdFile_path) = True Then
-        Kill SQLiteCmdFile_path
-    End If
-    
-    Open SQLiteCmdFile_path For Output As iFileNum_SQLiteCmd
-    
-    Print #iFileNum_SQLiteCmd, "ATTACH """ & SQLiteDb_path & """ AS TempDb;"
-    Print #iFileNum_SQLiteCmd, "INSERT INTO [" & Tbl_des_name & "] SELECT * FROM TempDb.[" & Tbl_des_name & "];"
-    
-    Close #iFileNum_SQLiteCmd
-    
-    ShellCmd = "python " & [CurrentProject].[Path] & "\SQLiteCmdParser.py " & GetLinkTblConnInfo(Tbl_des_name, "DATABASE") & " " & SQLiteCmdFile_path
-    Call ShellAndWait(ShellCmd, vbHide)
-
-    Kill SQLiteCmdFile_path
     Kill SQLiteDb_path
     Kill TempDb_path
 
