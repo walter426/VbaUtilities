@@ -187,6 +187,7 @@ Public Function LinkTblByTdf(Tbl_src_name As String, Tbl_des_name As String, str
         tdf.SourceTableName = Tbl_src_name
         
         .TableDefs.Append tdf
+        .TableDefs(Tbl_des_name).RefreshLink
         
     End With 'CurrentDb
         
