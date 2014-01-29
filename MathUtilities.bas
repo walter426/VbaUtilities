@@ -18,6 +18,26 @@
 Attribute VB_Name = "MathUtilities"
 Option Compare Database
 
+'Min
+Public Function Min(X, Y)
+    If X < Y Then
+        Min = X
+    Else
+        Min = Y
+    End If
+    
+End Function
+
+'Max
+Public Function Max(X, Y)
+    If X > Y Then
+        Max = X
+    Else
+        Max = Y
+    End If
+    
+End Function
+
 'Ceiling
 Public Function Ceiling(X)
     Ceiling = Int(X) - (X - Int(X) > 0)
