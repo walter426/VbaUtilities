@@ -21,14 +21,17 @@ Option Explicit
 
 Public NotShowMsgBox As Boolean
 
+'Enable user-defined MsgBox
 Public Function EnableMsgBox()
     NotShowMsgBox = False
 End Function
 
+'Disable user-defined MsgBox
 Public Function DisableMsgBox()
     NotShowMsgBox = True
 End Function
 
+'Display string in a msgbox depending on the user-defined flag
 Public Function ShowMsgBox(str As String) As Boolean
     
     If NotShowMsgBox = False Then

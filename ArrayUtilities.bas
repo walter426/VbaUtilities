@@ -56,6 +56,7 @@ Err_AppendArray:
     
 End Function
 
+'Delete item in an array by index
 Public Sub DeleteArrayItem(arr As Variant, index As Long)
     Dim i As Long
     

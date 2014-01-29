@@ -10,10 +10,12 @@ AccessObjUtilities
 - Check whether table exists or not
 - Delete Query
 - Check whether query exist or not
-- Obtain record count of a table
-- Obtain record count of a query
-- Obtain record count of a SQL object
+- Obtain record counts of a table
+- Obtain record counts of a query
+- Obtain record counts of a SQL object
 - Check whether a table is valid or not
+- Check whether a query is valid or not
+- Link Table Through Table Definition
 - Remove all link tables
 - Get the current path of a link table
 - Get Link Table connection Info
@@ -21,11 +23,12 @@ AccessObjUtilities
 - Find a column in a table
 - Export Table to Text file
 - Convert Access Table into HTML Format
-- Concatenate releated records in a table (SQL Query Use)
+- Generate a concatenated string of related records (SQL Query Use)
 
 ArrayUtilities
 - Find item in an array
 - Append items to an array
+- Delete item in an array by index
 
 ExcelUtilities:
 - Check whether specified worksheet exists or not in specified workbook
@@ -47,7 +50,14 @@ FileSysUtilities:
 - Replace multiple strings in multiple files in a folder
 - Replace multiple strings in a file
 
+General Utilities:
+- Enable user-defined MsgBox
+- Disable user-defined MsgBox
+- Display string in a msgbox depending on the user-defined flag
+
 MathUtilities:
+- Min
+- Max
 - Ceiling
 - Logarithm of base 10
 
@@ -65,6 +75,8 @@ SqlUtilities:
 - Create a set of grouped table, the grouping config is set in a specified table
 - Create table which are joined from two tables having the same columns for joining
 - Create table which is cancatenated from multiple tables of the same structure
+- Execute SQLite Command Set
+- Append Table into a SQLite database
 
 StrUtilities:
 - Split a string into array by separator
