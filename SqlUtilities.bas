@@ -777,10 +777,44 @@ Public Function ExecuteSQLiteCmdSet(SQLiteDb_path As String, CmdSet As String) A
     Print #iFileNum_SQLiteCmd, CmdSet
     Close #iFileNum_SQLiteCmd
     
-    ShellCmd = "python " & [CurrentProject].[Path] & "\SQLiteCmdParser.py " & SQLiteDb_path & " " & SQLiteCmdFile_path
+    
+    Dim SQLiteCmdLog_path As String
+    SQLiteCmdLog_path = [CurrentProject].[Path] & "\SQLiteCmd.log"
+    
+    If FileExists(SQLiteCmdLog_path) = True Then
+        Kill SQLiteCmdLog_path
+    End If
+    
+    
+    ShellCmd = "python " & [CurrentProject].[Path] & "\SQLiteCmdParser.py " & SQLiteDb_path & " " & SQLiteCmdFile_path & " " & SQLiteCmdLog_path
     Call ShellAndWait(ShellCmd, vbHide)
 
+    If FileExists(SQLiteCmdLog_path) = False Then
+        FailedReason = "SQLiteCmdParser"
+        GoTo Exit_ExecuteSQLiteCmdSet
+    End If
+    
+    
+    Dim iFileNum_SQLiteCmdLog As Integer
+    Dim SQLiteCmdLog_line As String
+    
+    iFileNum_SQLiteCmdLog = FreeFile()
+    
+    Open SQLiteCmdLog_path For Input As iFileNum_SQLiteCmdLog
+    
+    If Not EOF(iFileNum_SQLiteCmdLog) Then
+        Line Input #iFileNum_SQLiteCmdLog, SQLiteCmdLog_line
+    End If
+    
+    If SQLiteCmdLog_line <> "done" Then
+        FailedReason = SQLiteCmdLog_path
+        GoTo Exit_ExecuteSQLiteCmdSet
+    End If
+    
+    Close iFileNum_SQLiteCmdLog
+    
     Kill SQLiteCmdFile_path
+    Kill SQLiteCmdLog_path
 
 
 Exit_ExecuteSQLiteCmdSet:
@@ -820,7 +854,7 @@ Public Function AppendTblToSQLite(Tbl_src_name As String, Tbl_des_name As String
     End If
     
     Call CreateDatabase(TempDb_path, dbLangGeneral)
-
+    
     
     'Copy Table into the TempDb
     Dim SQL_cmd As String
@@ -849,7 +883,12 @@ Public Function AppendTblToSQLite(Tbl_src_name As String, Tbl_des_name As String
     SQL_cmd = "ATTACH """ & SQLiteDb_path & """ AS TempDb;" & vbCrLf & _
                 "INSERT INTO [" & Tbl_des_name & "] SELECT * FROM TempDb.[" & Tbl_des_name & "];"
     
-    Call ExecuteSQLiteCmdSet(GetLinkTblConnInfo(Tbl_des_name, "DATABASE"), SQL_cmd)
+    FailedReason = ExecuteSQLiteCmdSet(GetLinkTblConnInfo(Tbl_des_name, "DATABASE"), SQL_cmd)
+    
+    If FailedReason <> "" Then
+        GoTo Exit_AppendTblToSQLite
+    End If
+    
     
     Kill SQLiteDb_path
     Kill TempDb_path
