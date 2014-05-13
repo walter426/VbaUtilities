@@ -29,7 +29,7 @@ Public Sub RunSQL_CmdWithoutWarning(SQL_cmd As String)
     DoCmd.SetWarnings True
 End Sub
 
-'To create expression that consists of a set of vector counters in a specified pattern
+'To create an expression that consists of a set of vector columns aggregated in a specified pattern
 Public Function CreateSqlSeg_VectorColAgg(col_pattern As String, str_agg As String, Idx_start As Integer, Idx_end As Integer, Optional wildcard As String = "#") As String
     On Error GoTo Err_CreateSqlSeg_VectorColAgg
     
