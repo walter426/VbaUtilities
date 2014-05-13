@@ -29,6 +29,30 @@ Public Sub RunSQL_CmdWithoutWarning(SQL_cmd As String)
     DoCmd.SetWarnings True
 End Sub
 
+'To create expression that consists of a set of vector counters in a specified pattern
+Public Function CreateSqlSeg_VectorColAgg(col_pattern As String, str_agg As String, Idx_start As Integer, Idx_end As Integer, Optional wildcard As String = "#") As String
+    On Error GoTo Err_CreateSqlSeg_VectorColAgg
+    
+    Dim SQL_Seg As String
+    Dim col_idx As Integer
+    
+    For col_idx = Idx_start To Idx_end
+        SQL_Seg = SQL_Seg & Replace(col_pattern, wildcard, col_idx) & " " & str_agg & " "
+    Next col_idx
+    
+    SQL_Seg = Left(SQL_Seg, Len(SQL_Seg) - 2)
+    
+    
+Exit_CreateSqlSeg_VectorColAgg:
+    CreateSqlSeg_VectorColAgg = SQL_Seg
+    Exit Function
+
+Err_CreateSqlSeg_VectorColAgg:
+    ShowMsgBox (Err.Description)
+    Resume Exit_CreateSqlSeg_VectorColAgg
+    
+End Function
+
 'Re-Select table columns
 Public Sub ModifyTbl_ReSelect(Tbl_name, str_select)
     Dim Tbl_T_name As String
