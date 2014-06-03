@@ -646,8 +646,11 @@ Function ReplaceStrInFile(file_name As String, Arr_f As Variant, Arr_r As Varian
     Kill temp_file_name
     On Error GoTo Err_ReplaceStrInFile
     
-    Close
-    Open temp_file_name For Output As #1
+    
+    Dim iFileNum As String
+    iFileNum = FreeFile()
+    
+    Open temp_file_name For Output As #iFileNum
     
     Dim fso As Object
     Dim File As Object
@@ -660,8 +663,9 @@ Function ReplaceStrInFile(file_name As String, Arr_f As Variant, Arr_r As Varian
     Dim i As Integer
     Dim str_f As String
     Dim str_r As String
-    
+
     row = 0
+
 
     Do Until File.AtEndOfStream = True 'EOF(2)
         row = row + 1
@@ -682,16 +686,14 @@ Function ReplaceStrInFile(file_name As String, Arr_f As Variant, Arr_r As Varian
         
 Loop_ReplaceStrInFile_1:
 
-        Print #1, str_line
+        Print #iFileNum, str_line
         
     Loop
 
+
     File.Close
-    
-    Close
-    
+    Close iFileNum
     Kill file_name
-    
     Name temp_file_name As file_name
     
 
@@ -704,3 +706,4 @@ Err_ReplaceStrInFile:
     GoTo Exit_ReplaceStrInFile
     
 End Function
+

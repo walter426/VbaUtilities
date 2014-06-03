@@ -343,3 +343,62 @@ Err_ReplaceStrInWsRng:
     Resume Exit_ReplaceStrInWsRng
     
 End Function
+
+'Append Access SQL Object(Table, Query) to Excel worksheet, and activate it 
+Public Function AppendSqlObjToAndActivateWs(oWs As Worksheet, SqlObj_name As String, Optional AddBorder As Boolean = False) As String
+    On Error GoTo Err_AppendSqlObjToAndActivateWs
+    
+    Dim FailedReason As String
+
+    If TableExist(SqlObj_name) = False And QueryExist(SqlObj_name) Then
+        FailedReason = SqlObj_name & " does not exist!"
+        GoTo Exit_AppendSqlObjToAndActivateWs
+    End If
+    
+    With oWs
+        'Have to activate the worksheet for copying query with no error!
+        .Activate
+        
+        'Store the new start row
+        Dim RowEnd_old As Long
+        Dim RowStart_new As Long
+        
+        RowEnd_old = .UsedRange.Rows.count
+        RowStart_new = RowEnd_old + 1
+        
+        'Append SqlObj_name to the sheet
+        
+        'Create Recordset object
+        Dim rs As DAO.Recordset
+        Set rs = CurrentDb.OpenRecordset(SqlObj_name, dbOpenSnapshot)
+
+        .Range("A" & CStr(.UsedRange.Rows.count + 1)).CopyFromRecordset rs, 65534
+
+
+        'Copy format from previous rows to new rows
+        .Range(.Cells(RowEnd_old, 1), .Cells(RowEnd_old, .UsedRange.Columns.count)).Copy
+        .Range(.Cells(RowStart_new, 1), .Cells(.UsedRange.Rows.count, .UsedRange.Columns.count)).PasteSpecial Paste:=xlPasteFormats
+        
+
+        If AddBorder = True Then
+            'Add border at the last row
+            With .UsedRange.Rows(.UsedRange.Rows.count).Borders(xlEdgeBottom)
+                .LineStyle = xlContinuous
+                .Weight = xlThin
+                .ColorIndex = xlAutomatic
+            End With '.UsedRange.Rows(.UsedRange.Rows.count).Borders(xlEdgeBottom)
+        End If
+        
+        
+    End With 'oWs
+    
+    
+Exit_AppendSqlObjToAndActivateWs:
+    AppendSqlObjToAndActivateWs = FailedReason
+    Exit Function
+
+Err_AppendSqlObjToAndActivateWs:
+    FailedReason = Err.Description
+    Resume Exit_AppendSqlObjToAndActivateWs
+    
+End Function
