@@ -117,13 +117,13 @@ Public Function CoorTransform_Wgs84ToHK1980(Lng, Lat, Optional Delimiter As Stri
     Lng_HK1980 = Lng - (8.8 / 3600)
     Lat_HK1980 = Lat + (5.5 / 3600)
     
-    EastNorth_WGS84 = CoorTransform_GeographicToGrid(E0, N0, Lng0, Lat0, m_0, M0, a, e2, Lng_HK1980, Lat_HK1980)
+    EastNorth_HK1980 = CoorTransform_GeographicToGrid(E0, N0, Lng0, Lat0, m_0, M0, a, e2, Lng_HK1980, Lat_HK1980)
     
     
     If Delimiter = "" Then
-        CoorTransform_Wgs84ToHK1980 = Array(EastNorth_WGS84(0), EastNorth_WGS84(1))
+        CoorTransform_Wgs84ToHK1980 = EastNorth_HK1980
     Else
-        CoorTransform_Wgs84ToHK1980 = EastNorth_WGS84(0) & Delimiter & EastNorth_WGS84(1)
+        CoorTransform_Wgs84ToHK1980 = EastNorth_HK1980(0) & Delimiter & EastNorth_HK1980(1)
     End If
     
     
