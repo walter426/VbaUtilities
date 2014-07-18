@@ -49,7 +49,7 @@ End Function
 
 
 'Coordinate Transform from grid to geographic in degree
-Public Function CoorTransform_GridToGeographic(E0, N0, Lng0, Lat0, m_0, M0, a, e2, Easting, Northing) As Variant
+Public Function CoorTransform_GridToGeographic(E0, N0, Lng0, Lat0, m_0, M0, a, e2, Easting, Northing, Optional accuracy = 6) As Variant
     'Meridian distance Coefficients
     A0 = 1 - (e2 / 4) - (3 * (e2 ^ 2) / 64)
     A2 = (3 / 8) * (e2 + ((e2 ^ 2) / 4))
@@ -70,7 +70,10 @@ Public Function CoorTransform_GridToGeographic(E0, N0, Lng0, Lat0, m_0, M0, a, e
     Lat_min = -90 * Pi / 180
     Lat_max = 90 * Pi / 180
 
-    Do While Abs(M - Mp) > 0.0000001
+    accuracy = 10 ^ (-accuracy)
+    
+
+    Do While Abs(M - Mp) > accuracy
         Lat_p = (Lat_max + Lat_min) / 2
         M = a * (A0 * Lat_p - A2 * Sin(2 * Lat_p) + A4 * Sin(4 * Lat_p))
         
