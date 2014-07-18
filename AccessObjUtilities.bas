@@ -347,8 +347,8 @@ Exit_FindColInTbl:
     Exit Function
 End Function
 
-'Export Table to Text file
-Public Function ExportTableToTxt(Tbl_name As String, des As String, Optional Delim As String = " ", Optional HasFldName As Boolean = True, Optional NullStr As String = "", Optional DateFmt As String = "MM/DD/YY", Optional TimeFmt As String = "h:mm") As String
+'Export Access Table to Text file
+Public Function ExportTableToTxt(Tbl_name As String, des As String, Optional Delim As String = " ", Optional Quotation As String = "", Optional HasFldName As Boolean = True, Optional NullStr As String = "", Optional DateFmt As String = "MM/DD/YY", Optional TimeFmt As String = "h:mm") As String
     On Error GoTo Err_ExportTableToTxt
     
     Dim FailedReason As String
@@ -422,7 +422,7 @@ Public Function ExportTableToTxt(Tbl_name As String, des As String, Optional Del
                     End If
                     
                     
-                    line = line & fld_str & Delim
+                    line = line & Quotation & fld_str & Quotation & Delim
                     
                 Next
                 

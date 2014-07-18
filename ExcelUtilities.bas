@@ -214,17 +214,39 @@ End Function
 
 
 'Export a table to one or more worksheets in case row count over 65535
-Public Function ExportTblToSht(oExcel As Object, Wb_path, Tbl_name As String, Sht_name As String) As String
+Public Function ExportTblToSht(Wb_path, Tbl_name As String, sht_name As String) As String
     On Error GoTo Err_ExportTblToSht
     
     Dim FailedReason As String
-    FailedReason = ""
 
-    If Len(Dir(Wb_path)) = 0 Or TableExist(Tbl_name) = False Then
+    If TableExist(Tbl_name) = False Then
         FailedReason = Tbl_name & " does not exist"
         GoTo Exit_ExportTblToSht
     End If
 
+    
+    If Len(Dir(Wb_path)) = 0 Then
+        Dim oExcel As Excel.Application
+        Set oExcel = CreateObject("Excel.Application")
+    
+        With oExcel
+            Dim oWb As Workbook
+            Set oWb = .Workbooks.Add
+            
+            
+            With oWb
+                .SaveAs Wb_path
+                .Close
+            End With 'oWb_DailyRpt
+            
+            .Quit
+            
+        End With 'oExcel
+        
+        Set oExcel = Nothing
+        
+    End If
+    
     
     Dim MaxRowPerSht As Long
     Dim RecordCount As Long
@@ -237,9 +259,13 @@ Public Function ExportTblToSht(oExcel As Object, Wb_path, Tbl_name As String, Sh
         GoTo Exit_ExportTblToSht
     
     ElseIf RecordCount <= MaxRowPerSht Then
-        DoCmd.TransferSpreadsheet acExport, acSpreadsheetTypeExcel9, Tbl_name, Wb_path, True, Sht_name
+        DoCmd.TransferSpreadsheet acExport, acSpreadsheetTypeExcel9, Tbl_name, Wb_path, True, sht_name
     
     Else
+        'handle error msg, "File sharing lock count exceeded. Increase MaxLocksPerFile registry entry"
+        DAO.DBEngine.SetOption dbMaxLocksPerFile, 40000
+        
+        
         Dim Tbl_COPY_name As String
         Tbl_COPY_name = Tbl_name & "_COPY"
         
@@ -269,7 +295,7 @@ Public Function ExportTblToSht(oExcel As Object, Wb_path, Tbl_name As String, Sh
         ShtCount = Int(RecordCount / MaxRowPerSht)
         
         For sht_idx = 0 To ShtCount
-            Sht_part_name = Sht_name
+            Sht_part_name = sht_name
             
             If sht_idx > 0 Then
                 Sht_part_name = Sht_part_name & "_" & sht_idx
@@ -317,6 +343,7 @@ Err_ExportTblToSht:
     Resume Exit_ExportTblToSht
     
 End Function
+
 
 'Replace String in a range of a worksheet that enclose any excel error in a function
 Public Function ReplaceStrInWsRng(oWsRng As Range, What As Variant, Replacement As Variant, Optional LookAt As Variant, Optional SearchOrder As Variant, Optional MatchCase As Variant, Optional MatchByte As Variant, Optional SearchFormat As Variant, Optional ReplaceFormat As Variant) As String

@@ -18,6 +18,14 @@ Attribute VB_Name = "ArrayUtilities"
 
 Option Compare Database
 
+Public Function GetItemInArray(Array_src As Variant, idx As Long) As Variant
+    GetItemInArray = Array_src(idx)
+End Function
+
+Public Function GetItemInStrArray(StrArray_src As String, separator As String, idx As Long) As Variant
+    GetItemInStrArray = GetItemInArray(SplitStrIntoArray(StrArray_src, separator), idx)
+End Function
+
 'Find item in an array
 Public Function FindItemInArray(Array_src As Variant, item As String) As Long
     FindItemInArray = -1
