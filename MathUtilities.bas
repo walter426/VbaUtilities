@@ -18,6 +18,8 @@
 Attribute VB_Name = "MathUtilities"
 Option Compare Database
 
+Public Const Pi = 3.14159265359
+
 'Min
 Public Function Min(X, Y)
     If X < Y Then
