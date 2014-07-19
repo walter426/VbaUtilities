@@ -73,16 +73,15 @@ Public Function CoorTransform_GridToGeographic(E0, N0, Lng0, Lat0, m_0, M0, a, e
     accuracy = 10 ^ (-accuracy)
     
 
-    Do While Abs(M - Mp) > accuracy
-        Lat_p = (Lat_max + Lat_min) / 2
-        M = a * (A0 * Lat_p - A2 * Sin(2 * Lat_p) + A4 * Sin(4 * Lat_p))
-        
-        If M >= Mp Then
-            Lat_max = Lat_p
-        Else
-            Lat_min = Lat_p
-        End If
-        
+    'Newton 's method
+    Lat_p = (Lat_max + Lat_min) / 2
+    f = 1.1
+    
+    Do While Abs(f) > accuracy
+        f = Mp - a * (A0 * Lat_p - A2 * Sin(2 * Lat_p) + A4 * Sin(4 * Lat_p))
+        f_d1 = -a * (A0 - A2 * 2 * Cos(2 * Lat_p) + A4 * 4 * Cos(4 * Lat_p))
+        Lat_p = Lat_p - (f / f_d1)
+
     Loop
     
     
