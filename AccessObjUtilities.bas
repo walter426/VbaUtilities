@@ -171,6 +171,52 @@ Public Function QueryValid(Qryname As String) As Boolean
     
 End Function
 
+'Transfer multiple objects in a database
+Public Function TransferObjSetInDb(TransferType As Variant, DatabaseType As String, DatabaseName As String, ObjectType As Variant, SrcList As Variant, DesList As Variant, Optional StructureOnly As Boolean = False, Optional StoreLogin As Boolean = False) As String
+    On Error GoTo Err_TransferObjSetInDb
+
+    Dim FailedReason As String
+
+    If Len(Dir(DatabaseName)) = 0 Then
+        FailedReason = DatabaseName
+        GoTo Exit_TransferObjSetInDb
+    End If
+    
+
+    If VarType(DesList) <> vbArray + vbVariant Then
+        DesList = SrcList
+    End If
+    
+
+    If UBound(SrcList) <> UBound(DesList) Then
+        FailedReason = "No. of elements in SrcList and DesList are not equal"
+        GoTo Exit_TransferObjSetInDb
+    End If
+    
+    
+    Dim TblNameIdx As Integer
+
+    For TblNameIdx = 0 To UBound(SrcList)
+        On Error Resume Next
+        DoCmd.TransferDatabase TransferType, DatabaseType, DatabaseName, ObjectType, SrcList(TblNameIdx), DesList(TblNameIdx), StructureOnly, StoreLogin
+        On Error GoTo Next_TblNameIdx
+        
+Next_TblNameIdx:
+    Next TblNameIdx
+    
+    On Error GoTo Err_TransferObjSetInDb
+    
+    
+Exit_TransferObjSetInDb:
+    TransferObjSetInDb = FailedReason
+    Exit Function
+
+Err_TransferObjSetInDb:
+    FailedReason = Err.Description
+    Resume Exit_TransferObjSetInDb
+    
+End Function
+
 'Link Table Through Table Definition
 Public Function LinkTblByTdf(Tbl_src_name As String, Tbl_des_name As String, str_conn As String) As String
     On Error GoTo Err_LinkTblByTdf
