@@ -197,6 +197,13 @@ Public Function TransferObjSetInDb(TransferType As Variant, DatabaseType As Stri
     Dim TblNameIdx As Integer
 
     For TblNameIdx = 0 To UBound(SrcList)
+        If ObjectType = acTable Then
+            DelTable (DesList(TblNameIdx))
+        ElseIf ObjectType = acQuery Then
+            DelQuery (DesList(TblNameIdx))
+        End If
+        
+        
         On Error Resume Next
         DoCmd.TransferDatabase TransferType, DatabaseType, DatabaseName, ObjectType, SrcList(TblNameIdx), DesList(TblNameIdx), StructureOnly, StoreLogin
         On Error GoTo Next_TblNameIdx
@@ -214,6 +221,47 @@ Exit_TransferObjSetInDb:
 Err_TransferObjSetInDb:
     FailedReason = Err.Description
     Resume Exit_TransferObjSetInDb
+    
+End Function
+
+'Link multiple table in a daily file of specified format
+Public Function LinkTblSetInDailyFileInDir(DataDate As Date, DateFmt As String, DailyFileDir_path As String, DailyFile_prefix As String, FileFmt As String, SrcList As Variant, DesList As Variant, Optional ReferToLocal As Boolean = False) As String
+    On Error GoTo Err_LinkTblSetInDailyFileInDir
+    
+    Dim FailedReason As String
+
+    'Link Cell Info of FDD
+    Dim DailyFile_path As String
+    DailyFile_path = DailyFile_prefix & "_" & Format(DataDate, DateFmt) & "." & FileFmt
+    
+    If ReferToLocal = False Then
+        DailyFile_path = DailyFileDir_path & DailyFile_path
+
+        Dim DailyFile_l_path As String
+        DailyFile_l_path = CurrentProject.Path & LocalDailyData_path & DailyFile_prefix & "_local." & FileFmt
+    
+        Call CopyFileBypassErr(DailyFile_path, DailyFile_l_path)
+        DailyFile_path = DailyFile_l_path
+    
+    Else
+        DailyFile_path = CurrentProject.Path & LocalDailyData_path & DailyFile_path
+    End If
+
+
+    If FileFmt = "xls" Then
+        FailedReason = LinkToWorksheetInWorkbook(DailyFile_path, SrcList, DesList)
+    ElseIf FileFmt = "mdb" Then
+        FailedReason = TransferObjSetInDb(acLink, "Microsoft Access", DailyFile_path, acTable, SrcList, DesList, True)
+    End If
+    
+
+Exit_LinkTblSetInDailyFileInDir:
+    LinkTblSetInDailyFileInDir = FailedReason
+    Exit Function
+
+Err_LinkTblSetInDailyFileInDir:
+    FailedReason = Err.Description
+    Resume Exit_LinkTblSetInDailyFileInDir
     
 End Function
 

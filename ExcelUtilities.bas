@@ -192,6 +192,8 @@ Next_SheetNameIdx_1:
         FullName = FullNameList(SheetNameIdx)
         SheetNameAndRange = SheetNameAndRangeList(SheetNameIdx)
 
+        DelTable(SheetName)
+        
         On Error Resume Next
         DoCmd.TransferSpreadsheet acLink, , SheetName, FullName, True, SheetNameAndRange
         On Error GoTo Next_SheetNameIdx_2
