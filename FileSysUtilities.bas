@@ -118,16 +118,10 @@ Err_ExtractZip:
 End Function
 
 'Ftp upload file
-Public Function FTPUpload(sSite, sUsername, sPassword, sLocalFile, sRemotePath, Optional Delay As Integer = 1000) As String
-    'This script is provided under the Creative Commons license located
-    'at http://creativecommons.org/licenses/by-nc/2.5/ . It may not
-    'be used for commercial purposes with out the expressed written consent
-    'of NateRice.com
-    
-    Const OpenAsDefault = -2
-    Const FailIfNotExist = 0
-    Const ForReading = 1
-    Const ForWriting = 2
+Public Function FTPUpload(Site, sUsername, sPassword, sLocalFile, sRemotePath, Optional Delay As Integer = 1000) As String
+    On Error GoTo Err_FTPUpload
+
+    Dim FailedReason As String
     
     Dim oFTPScriptFSO As Object
     Dim oFTPScriptShell As Object
@@ -137,6 +131,7 @@ Public Function FTPUpload(sSite, sUsername, sPassword, sLocalFile, sRemotePath, 
     
     sRemotePath = Trim(sRemotePath)
     sLocalFile = Trim(sLocalFile)
+    
     
     '----------Path Checks---------
     'Here we willcheck the path, if it contains
@@ -154,6 +149,7 @@ Public Function FTPUpload(sSite, sUsername, sPassword, sLocalFile, sRemotePath, 
         End If
     End If
     
+    
     'Check to ensure that a remote path was
     'passed. If it's blank then pass a "\"
     If Len(sRemotePath) = 0 Then
@@ -163,22 +159,26 @@ Public Function FTPUpload(sSite, sUsername, sPassword, sLocalFile, sRemotePath, 
         sRemotePath = "\"
     End If
     
+    
     'Check the local path and file to ensure
     'that either the a file that exists was
     'passed or a wildcard was passed.
     If InStr(sLocalFile, "*") Then
         If InStr(sLocalFile, " ") Then
-            FTPUpload = "Error: Wildcard uploads do not work if the path contains a " & _
-                        "space." & vbCrLf
-            FTPUpload = FTPUpload & "This is a limitation of the Microsoft FTP client."
-            Exit Function
+            FailedReason = "Error: Wildcard uploads do not work if the path contains a space." & vbCrLf
+            FailedReason = FailedReason & "This is a limitation of the Microsoft FTP client."
+            
+            GoTo Exit_FTPUpload
         End If
+        
     ElseIf Len(sLocalFile) = 0 Or Not oFTPScriptFSO.FileExists(sLocalFile) Then
         'nothing to upload
-        FTPUpload = "Error: File Not Found."
-        Exit Function
+        FailedReason = "Error: File Not Found."
+        GoTo Exit_FTPUpload
+        
     End If
     '--------END Path Checks---------
+    
     
     'build input file for ftp command
     Dim sFTPScript As String
@@ -200,40 +200,45 @@ Public Function FTPUpload(sSite, sUsername, sPassword, sLocalFile, sRemotePath, 
     sFTPTempFile = sFTPTemp & "\" & oFTPScriptFSO.GetTempName
     sFTPResults = sFTPTemp & "\" & oFTPScriptFSO.GetTempName
     
+    
     'Write the input file for the ftp command
     'to a temporary file.
     Dim fFTPScript As Object
-    
     Set fFTPScript = oFTPScriptFSO.CreateTextFile(sFTPTempFile, True)
+    
     fFTPScript.WriteLine (sFTPScript)
     fFTPScript.Close
+    
     Set fFTPScript = Nothing
     
-    oFTPScriptShell.Run "%comspec% /c FTP -n -s:" & sFTPTempFile & " " & sSite & _
-                        " > " & sFTPResults, 0, True
-    
+    oFTPScriptShell.Run "%comspec% /c FTP -n -s:" & sFTPTempFile & " " & Site & " > " & sFTPResults, 0, True
     Sleep Delay
+    
     
     'Check results of transfer.
     Dim fFTPResults As Object
-    
-    Set fFTPResults = oFTPScriptFSO.OpenTextFile(sFTPResults, ForReading, _
-    FailIfNotExist, OpenAsDefault)
-    
     Dim sResults As String
-    sResults = fFTPResults.ReadAll
     
+    Const OpenAsDefault = -2
+    Const FailIfNotExist = 0
+    Const ForReading = 1
+    Const ForWriting = 2
+
+    Set fFTPResults = oFTPScriptFSO.OpenTextFile(sFTPResults, ForReading, FailIfNotExist, OpenAsDefault)
+    sResults = fFTPResults.ReadAll
     fFTPResults.Close
     
+    
     If InStr(sResults, "226 Transfer complete.") > 0 Then
-        FTPUpload = ""
+        FailedReason = ""
     ElseIf InStr(sResults, "File not found") > 0 Then
-        FTPUpload = "Error: File Not Found"
+        FailedReason = "Error: File Not Found"
     ElseIf InStr(sResults, "cannot log in.") > 0 Then
-        FTPUpload = "Error: Login Failed."
+        FailedReason = "Error: Login Failed."
     Else
-        FTPUpload = "Error: Unknown."
+        FailedReason = "Error: Unknown."
     End If
+    
     
     oFTPScriptFSO.DeleteFile (sFTPTempFile)
     oFTPScriptFSO.DeleteFile (sFTPResults)
@@ -243,14 +248,22 @@ Public Function FTPUpload(sSite, sUsername, sPassword, sLocalFile, sRemotePath, 
     oFTPScriptShell.CurrentDirectory = sOriginalWorkingDirectory
     Set oFTPScriptShell = Nothing
     
+    
+Exit_FTPUpload:
+    FTPUpload = FailedReason
+    Exit Function
+    
+Err_FTPUpload:
+    FailedReason = Err.Description
+    Resume Exit_FTPDownload
+    
 End Function
 
 'Ftp download file
-Function FTPDownload(sSite, sUsername, sPassword, sLocalPath, sRemotePath, sRemoteFile, Optional Delay As Integer = 1000) As String
-    Const OpenAsDefault = -2
-    Const FailIfNotExist = 0
-    Const ForReading = 1
-    Const ForWriting = 2
+Function FTPDownload(Site, sUsername, sPassword, sLocalPath, sRemotePath, sRemoteFile, Optional Delay As Integer = 1000) As String
+    On Error GoTo Err_FTPDownload
+    
+    Dim FailedReason As String
     
     Dim oFTPScriptFSO As Object
     Dim oFTPScriptShell As Object
@@ -269,20 +282,24 @@ Function FTPDownload(sSite, sUsername, sPassword, sLocalPath, sRemotePath, sRemo
         End If
     End If
     
+    
     If Len(sRemotePath) = 0 Then
         sRemotePath = "\"
     End If
+    
     
     'If the local path was blank. Pass the current working direcory.
     If Len(sLocalPath) = 0 Then
         sLocalPath = oFTPScriptShell.CurrentDirectory
     End If
     
+    
     If Not oFTPScriptFSO.FolderExists(sLocalPath) Then
         'destination not found
-        FTPDownload = "Error: Local Folder Not Found."
-      Exit Function
+        FailedReason = "Error: Local Folder Not Found."
+        GoTo Exit_FTPDownload
     End If
+    
     
     Dim sOriginalWorkingDirectory As String
     sOriginalWorkingDirectory = oFTPScriptShell.CurrentDirectory
@@ -312,36 +329,42 @@ Function FTPDownload(sSite, sUsername, sPassword, sLocalPath, sRemotePath, sRemo
     
     'Write the input file for the ftp command to a temporary file.
     Dim fFTPScript As Object
-    
     Set fFTPScript = oFTPScriptFSO.CreateTextFile(sFTPTempFile, True)
+    
     fFTPScript.WriteLine (sFTPScript)
     fFTPScript.Close
+    
     Set fFTPScript = Nothing
     
-    oFTPScriptShell.Run "%comspec% /c FTP -n -s:" & sFTPTempFile & " " & sSite & _
-    " > " & sFTPResults, 0, True
     
+    oFTPScriptShell.Run "%comspec% /c FTP -n -s:" & sFTPTempFile & " " & Site & " > " & sFTPResults, 0, True
     Sleep Delay
 
     
     'Check results of transfer.
     Dim fFTPResults As Object
-    Set fFTPResults = oFTPScriptFSO.OpenTextFile(sFTPResults, ForReading, _
-                      FailIfNotExist, OpenAsDefault)
-                      
     Dim sResults As String
+    
+    Const OpenAsDefault = -2
+    Const FailIfNotExist = 0
+    Const ForReading = 1
+    Const ForWriting = 2
+    
+    Set fFTPResults = oFTPScriptFSO.OpenTextFile(sFTPResults, ForReading, FailIfNotExist, OpenAsDefault)
     sResults = fFTPResults.ReadAll
     fFTPResults.Close
     
+    
     If InStr(sResults, "226 Transfer complete.") > 0 Then
-        FTPDownload = ""
+        FailedReason = ""
     ElseIf InStr(sResults, "File not found") > 0 Then
-        FTPDownload = "Error: File Not Found"
+        FailedReason = "Error: File Not Found"
     ElseIf InStr(sResults, "cannot log in.") > 0 Then
-        FTPDownload = "Error: Login Failed."
+        FailedReason = "Error: Login Failed."
     Else
-        FTPDownload = "Error: Unknown."
+        FailedReason = "Error: Unknown."
     End If
+    
     
     oFTPScriptFSO.DeleteFile (sFTPTempFile)
     oFTPScriptFSO.DeleteFile (sFTPResults)
@@ -350,6 +373,15 @@ Function FTPDownload(sSite, sUsername, sPassword, sLocalPath, sRemotePath, sRemo
     
     oFTPScriptShell.CurrentDirectory = sOriginalWorkingDirectory
     Set oFTPScriptShell = Nothing
+    
+    
+Exit_FTPDownload:
+    FTPDownload = FailedReason
+    Exit Function
+    
+Err_FTPDownload:
+    FailedReason = Err.Description
+    Resume Exit_FTPDownload
     
 End Function
 
