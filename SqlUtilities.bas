@@ -568,8 +568,8 @@ Err_CreateTbls_Group:
 End Function
 
 
-'Create table which are joined from two tables having the same columns for joining
-Public Function CreateTbl_JoinTwoTbl(Tbl_src_1_name As String, Tbl_src_2_name As String, JoinCond As String, ColSet_Join As Variant, Tbl_des_name As String, Optional ColSet_src_1 As Variant = Null, Optional ColSet_src_2 As Variant = Null, Optional ColSet_Order As Variant = Null) As String
+'Create table which is joined from two tables
+Public Function CreateTbl_JoinTwoTbl(Tbl_src_1_name As String, Tbl_src_2_name As String, JoinCond As String, ColSet_Join_1 As Variant, ColSet_Join_2 As Variant, Tbl_des_name As String, Optional ColSet_src_1 As Variant = Null, Optional ColSet_src_2 As Variant = Null, Optional ColSet_Order As Variant = Null) As String
     On Error GoTo Err_CreateTbl_JoinTwoTbl
     
     Dim FailedReason As String
@@ -584,7 +584,11 @@ Public Function CreateTbl_JoinTwoTbl(Tbl_src_1_name As String, Tbl_src_2_name As
         GoTo Exit_CreateTbl_JoinTwoTbl
     End If
     
-    If IsNull(ColSet_Join) = True Then
+    If IsNull(ColSet_Join_1) = True Then
+        GoTo Exit_CreateTbl_JoinTwoTbl
+    End If
+    
+    If IsNull(ColSet_Join_2) = True Then
         GoTo Exit_CreateTbl_JoinTwoTbl
     End If
     
@@ -629,7 +633,7 @@ Public Function CreateTbl_JoinTwoTbl(Tbl_src_1_name As String, Tbl_src_2_name As
                 For fld_idx = 0 To .Fields.count - 1
                     fld_name = .Fields(fld_idx).Name
 
-                    If NumOfColSet_Join_found <= UBound(ColSet_Join) And FindStrInArray(ColSet_Join, fld_name) > -1 Then
+                    If NumOfColSet_Join_found <= UBound(ColSet_Join_2) And FindStrInArray(ColSet_Join_2, fld_name) > -1 Then
                         NumOfColSet_Join_found = NumOfColSet_Join_found + 1
                     Else
                         Call AppendArray(ColSet_src_2, Array("[" & fld_name & "]"))
@@ -649,8 +653,8 @@ Public Function CreateTbl_JoinTwoTbl(Tbl_src_1_name As String, Tbl_src_2_name As
     Dim SQL_Seg_JoinOn As String
     SQL_Seg_JoinOn = "("
 
-    For Col_Idx = LBound(ColSet_Join) To UBound(ColSet_Join)
-        SQL_Seg_JoinOn = SQL_Seg_JoinOn & "[" & Tbl_src_1_name & "].[" & ColSet_Join(Col_Idx) & "] = [" & Tbl_src_2_name & "].[" & ColSet_Join(Col_Idx) & "] AND "
+    For Col_Idx = LBound(ColSet_Join_1) To UBound(ColSet_Join_1)
+        SQL_Seg_JoinOn = SQL_Seg_JoinOn & "[" & Tbl_src_1_name & "].[" & ColSet_Join_1(Col_Idx) & "] = [" & Tbl_src_2_name & "].[" & ColSet_Join_2(Col_Idx) & "] AND "
     Next Col_Idx
 
     SQL_Seg_JoinOn = Left(SQL_Seg_JoinOn, Len(SQL_Seg_JoinOn) - 4) & ")"
