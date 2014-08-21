@@ -569,7 +569,7 @@ End Function
 
 
 'Create table which are joined from two tables having the same columns for joining
-Public Function CreateTbl_JoinTwoTbl(Tbl_src_1_name As String, Tbl_src_2_name As String, JoinCond As String, Str_Col_Join As String, Str_Col_Order As String, Tbl_output_name As String) As String
+Public Function CreateTbl_JoinTwoTbl(Tbl_src_1_name As String, Tbl_src_2_name As String, JoinCond As String, ColSet_Join As Variant, Tbl_des_name As String, Optional ColSet_src_1 As Variant = Null, Optional ColSet_src_2 As Variant = Null, Optional ColSet_Order As Variant = Null) As String
     On Error GoTo Err_CreateTbl_JoinTwoTbl
     
     Dim FailedReason As String
@@ -584,85 +584,86 @@ Public Function CreateTbl_JoinTwoTbl(Tbl_src_1_name As String, Tbl_src_2_name As
         GoTo Exit_CreateTbl_JoinTwoTbl
     End If
     
-    
-    Dim Col_Join As Variant
-    Col_Join = SplitStrIntoArray(Str_Col_Join, ",")
-    
-    If UBound(Col_Join) < 0 Then
+    If IsNull(ColSet_Join) = True Then
         GoTo Exit_CreateTbl_JoinTwoTbl
     End If
     
-    Dim Col_Order As Variant
-    Col_Order = SplitStrIntoArray(Str_Col_Order, ",")
+
+    DelTable (Tbl_des_name)
     
-    
-    DelTable (Tbl_output_name)
-    
-    
-    Dim SQL_Seg_Select As String
-    Dim SQL_Seg_OrderBy As String
-    
-    SQL_Seg_Select = "SELECT "
-    SQL_Seg_OrderBy = ""
-    
-    With CurrentDb
-        Dim RS_Tbl_src As Recordset
-        Set RS_Tbl_src = .OpenRecordset(Tbl_src_1_name)
-        
-        Dim fld_idx As Integer
-        Dim fld_name As String
-        
-        With RS_Tbl_src
-            For fld_idx = 0 To .Fields.count - 1
-                fld_name = .Fields(fld_idx).Name
-                SQL_Seg_Select = SQL_Seg_Select & "[" & Tbl_src_1_name & "].[" & fld_name & "], "
-            Next fld_idx
-            
-            .Close
-        End With 'RS_Tbl_src
-        
-        
-        Set RS_Tbl_src = .OpenRecordset(Tbl_src_2_name)
-        
-        With RS_Tbl_src
-            Dim NumOfCol_Join_found As Integer
-            NumOfCol_Join_found = 0
-                
-                
-            For fld_idx = 0 To .Fields.count - 1
-                fld_name = .Fields(fld_idx).Name
-                
-                If NumOfCol_Join_found <= UBound(Col_Join) And FindStrInArray(Col_Join, fld_name) > -1 Then
-                    NumOfCol_Join_found = NumOfCol_Join_found + 1
-                Else
-                    SQL_Seg_Select = SQL_Seg_Select & "[" & Tbl_src_2_name & "].[" & fld_name & "], "
-                End If
-            Next fld_idx
-            
-            .Close
-        End With 'RS_Tbl_src
-    End With 'CurrentDb
-    
-    SQL_Seg_Select = Left(SQL_Seg_Select, Len(SQL_Seg_Select) - 2)
-    
-    
-    Dim SQL_Seg_JoinOn As String
-    SQL_Seg_JoinOn = "("
     
     Dim Col_Idx As Integer
     
-    For Col_Idx = 0 To UBound(Col_Join)
-        SQL_Seg_JoinOn = SQL_Seg_JoinOn & "[" & Tbl_src_1_name & "].[" & Col_Join(Col_Idx) & "] = [" & Tbl_src_2_name & "].[" & Col_Join(Col_Idx) & "] AND "
+    
+    With CurrentDb
+        If IsNull(ColSet_src_1) = True Then
+            Dim RS_Tbl_src As Recordset
+            Set RS_Tbl_src = .OpenRecordset(Tbl_src_1_name)
+            
+            Dim fld_idx As Integer
+            Dim fld_name As String
+            
+            ColSet_src_1 = Array()
+            
+            With RS_Tbl_src
+                For fld_idx = 0 To .Fields.count - 1
+                    fld_name = .Fields(fld_idx).Name
+                    Call AppendArray(ColSet_src_1, Array("[" & fld_name & "]"))
+                Next fld_idx
+                
+                .Close
+                
+            End With 'RS_Tbl_src
+        End If
+        
+
+        Set RS_Tbl_src = .OpenRecordset(Tbl_src_2_name)
+        
+        With RS_Tbl_src
+            If IsNull(ColSet_src_2) = True Then
+                Dim NumOfColSet_Join_found As Integer
+                NumOfColSet_Join_found = 0
+                
+                ColSet_src_2 = Array()
+                    
+                For fld_idx = 0 To .Fields.count - 1
+                    fld_name = .Fields(fld_idx).Name
+
+                    If NumOfColSet_Join_found <= UBound(ColSet_Join) And FindStrInArray(ColSet_Join, fld_name) > -1 Then
+                        NumOfColSet_Join_found = NumOfColSet_Join_found + 1
+                    Else
+                        Call AppendArray(ColSet_src_2, Array("[" & fld_name & "]"))
+                    End If
+                Next fld_idx
+            End If
+
+            .Close
+            
+        End With 'RS_Tbl_src
+    End With 'CurrentDb
+    
+
+    Dim SQL_Seg_Select As String
+    SQL_Seg_Select = "SELECT " & "[" & Tbl_src_1_name & "]." & Join(ColSet_src_1, ", [" & Tbl_src_1_name & "].") & ", " & "[" & Tbl_src_2_name & "]." & Join(ColSet_src_2, ", [" & Tbl_src_2_name & "].")
+
+    Dim SQL_Seg_JoinOn As String
+    SQL_Seg_JoinOn = "("
+
+    For Col_Idx = LBound(ColSet_Join) To UBound(ColSet_Join)
+        SQL_Seg_JoinOn = SQL_Seg_JoinOn & "[" & Tbl_src_1_name & "].[" & ColSet_Join(Col_Idx) & "] = [" & Tbl_src_2_name & "].[" & ColSet_Join(Col_Idx) & "] AND "
     Next Col_Idx
 
     SQL_Seg_JoinOn = Left(SQL_Seg_JoinOn, Len(SQL_Seg_JoinOn) - 4) & ")"
 
     
-    If UBound(Col_Order) >= 0 Then
+    Dim SQL_Seg_OrderBy As String
+    SQL_Seg_OrderBy = ""
+    
+    If IsNull(ColSet_Order) = False Then
         SQL_Seg_OrderBy = "ORDER BY "
         
-        For Col_Idx = 0 To UBound(Col_Order)
-            SQL_Seg_OrderBy = SQL_Seg_OrderBy & "[" & Tbl_src_1_name & "].[" & Col_Order(Col_Idx) & "], "
+        For Col_Idx = LBound(ColSet_Order) To UBound(ColSet_Order)
+            SQL_Seg_OrderBy = SQL_Seg_OrderBy & "[" & Tbl_src_1_name & "].[" & ColSet_Order(Col_Idx) & "], "
         Next Col_Idx
         
         SQL_Seg_OrderBy = Left(SQL_Seg_OrderBy, Len(SQL_Seg_OrderBy) - 2)
@@ -673,14 +674,14 @@ Public Function CreateTbl_JoinTwoTbl(Tbl_src_1_name As String, Tbl_src_2_name As
     Dim SQL_cmd As String
     
     SQL_cmd = SQL_Seg_Select & " " & vbCrLf & _
-                "INTO [" & Tbl_output_name & "] " & vbCrLf & _
+                "INTO [" & Tbl_des_name & "] " & vbCrLf & _
                 "FROM [" & Tbl_src_1_name & "] " & JoinCond & " JOIN [" & Tbl_src_2_name & "] " & vbCrLf & _
                 "ON " & SQL_Seg_JoinOn & vbCrLf & _
                 SQL_Seg_OrderBy & " " & vbCrLf & _
                 ";"
-    
-    'MsgBox SQL_cmd
+
     RunSQL_CmdWithoutWarning (SQL_cmd)
+
 
 Exit_CreateTbl_JoinTwoTbl:
     CreateTbl_JoinTwoTbl = FailedReason

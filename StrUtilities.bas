@@ -27,7 +27,7 @@ Public Function SplitStrIntoArray(str As String, separator As String) As Variant
         
         Dim i As Integer
         
-        For i = 0 To UBound(Arr)
+        For i = LBound(Arr) To UBound(Arr)
             Arr(i) = Trim(Arr(i))
         Next i
     Else
@@ -45,7 +45,7 @@ Public Function FindStrInArray(Array_str As Variant, str As String) As Integer
 
     Dim i As Integer
     
-    For i = 0 To UBound(Array_str)
+    For i = LBound(Array_str) To UBound(Array_str)
         If str = Array_str(i) Then
             FindStrInArray = i
             Exit For
