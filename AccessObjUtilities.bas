@@ -688,3 +688,54 @@ Err_ConcatRelated:
     Resume Exit_ConcatRelated
     
 End Function
+
+'Comapact and renew Database
+Public Function CompactAndRenewDb(Db_path As String) As String
+    On Error GoTo Err_CompactAndRenewDb
+    
+    Dim FailedReason As String
+    
+    If FileExists(Db_path) = False Then
+        FailedReason = Db_path
+        GoTo Exit_CompactAndRenewDb
+    End If
+
+    
+    Dim WShell As Object
+    Dim FSO As Object
+    
+    Set WShell = CreateObject("WScript.Shell")
+    Set FSO = CreateObject("Scripting.FileSystemObject")
+
+
+    Dim Db_CP_path As String
+    Db_CP_path = WShell.ExpandEnvironmentStrings("%TEMP%") & "\" & FSO.GetBaseName(Db_path) & "_Compacted" & "." & FSO.GetExtensionName(Db_path)
+
+    
+    If Len(Dir(Db_CP_path)) > 0 Then
+        Kill Db_CP_path
+    End If
+    
+    Call CompactDatabase(Db_path, Db_CP_path)
+    
+    
+    If Len(Dir(Db_CP_path)) = 0 Then
+        GoTo Exit_CompactAndRenewDb
+    End If
+    
+    
+    Kill Db_path
+    Call CopyFileBypassErr(Db_CP_path, Db_path)
+    Kill Db_CP_path
+    
+    
+Exit_CompactAndRenewDb:
+    CompactAndRenewDb = FailedReason
+    Exit Function
+
+Err_CompactAndRenewDb:
+    FailedReason = Err.Description
+    Resume Exit_CompactAndRenewDb
+    
+End Function
+
