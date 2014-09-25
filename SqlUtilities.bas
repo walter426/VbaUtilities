@@ -568,7 +568,7 @@ Err_CreateTbls_Group:
 End Function
 
 
-'Create table which is joined from two tables
+'Create table which are joined from two tables
 Public Function CreateTbl_JoinTwoTbl(Tbl_src_1_name As String, Tbl_src_2_name As String, JoinCond As String, ColSet_Join_1 As Variant, ColSet_Join_2 As Variant, Tbl_des_name As String, Optional ColSet_src_1 As Variant = Null, Optional ColSet_src_2 As Variant = Null, Optional ColSet_Order As Variant = Null) As String
     On Error GoTo Err_CreateTbl_JoinTwoTbl
     
@@ -611,7 +611,7 @@ Public Function CreateTbl_JoinTwoTbl(Tbl_src_1_name As String, Tbl_src_2_name As
             
             With RS_Tbl_src
                 For fld_idx = 0 To .Fields.count - 1
-                    fld_name = .Fields(fld_idx).Name
+                    fld_name = .Fields(fld_idx).name
                     Call AppendArray(ColSet_src_1, Array("[" & fld_name & "]"))
                 Next fld_idx
                 
@@ -619,19 +619,19 @@ Public Function CreateTbl_JoinTwoTbl(Tbl_src_1_name As String, Tbl_src_2_name As
                 
             End With 'RS_Tbl_src
         End If
-        
 
-        Set RS_Tbl_src = .OpenRecordset(Tbl_src_2_name)
-        
-        With RS_Tbl_src
-            If IsNull(ColSet_src_2) = True Then
+
+        If IsNull(ColSet_src_2) = True Then
+            Set RS_Tbl_src = .OpenRecordset(Tbl_src_2_name)
+            
+            With RS_Tbl_src
                 Dim NumOfColSet_Join_found As Integer
                 NumOfColSet_Join_found = 0
                 
                 ColSet_src_2 = Array()
                     
                 For fld_idx = 0 To .Fields.count - 1
-                    fld_name = .Fields(fld_idx).Name
+                    fld_name = .Fields(fld_idx).name
 
                     If NumOfColSet_Join_found <= UBound(ColSet_Join_2) And FindStrInArray(ColSet_Join_2, fld_name) > -1 Then
                         NumOfColSet_Join_found = NumOfColSet_Join_found + 1
@@ -639,11 +639,11 @@ Public Function CreateTbl_JoinTwoTbl(Tbl_src_1_name As String, Tbl_src_2_name As
                         Call AppendArray(ColSet_src_2, Array("[" & fld_name & "]"))
                     End If
                 Next fld_idx
-            End If
-
-            .Close
-            
-        End With 'RS_Tbl_src
+    
+                .Close
+                
+            End With 'RS_Tbl_src
+        End If
     End With 'CurrentDb
     
 
